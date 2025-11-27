@@ -411,10 +411,17 @@ export default function StoriesPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.pageTitle}>Community Stories</h1>
-        <p className={styles.pageSubtitle}>
-          Inspiring stories from cyclists, pedestrians, and motorcyclists
-        </p>
+        <div className={styles.headerTop}>
+          <div>
+            <h1 className={styles.pageTitle}>Community Stories</h1>
+            <p className={styles.pageSubtitle}>
+              Inspiring stories from cyclists, pedestrians, and motorcyclists
+            </p>
+          </div>
+          <Link to="/submit-story" className={styles.submitButton}>
+            + Share Your Story
+          </Link>
+        </div>
       </header>
 
       <SearchAndFilters

@@ -14,10 +14,16 @@
 }
 
 .header {
-  text-align: center;
   margin-bottom: 50px;
   padding-bottom: 30px;
   border-bottom: 2px solid #f0f0f0;
+}
+
+.headerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
 }
 
 .pageTitle {
@@ -34,6 +40,29 @@
   color: #666;
   font-weight: 400;
   line-height: 1.5;
+}
+
+.submitButton {
+  display: inline-block;
+  padding: 12px 24px;
+  background-color: #0066cc;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  height: fit-content;
+  margin-top: 2px;
+}
+
+.submitButton:hover {
+  background-color: #0052a3;
+}
+
+.submitButton:active {
+  transform: scale(0.98);
 }
 
 /* Filter Section */
@@ -314,6 +343,16 @@
 
   .header {
     margin-bottom: 40px;
+  }
+
+  .headerTop {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .submitButton {
+    width: 100%;
+    text-align: center;
   }
 
   .filtersContainer {
