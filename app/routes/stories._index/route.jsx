@@ -413,7 +413,7 @@ export default function StoriesPage() {
       <header className={styles.header}>
         <div className={styles.headerTop}>
           <div>
-            <h1 className={styles.pageTitle}>Community Stories</h1>
+            <h1 className={styles.pageTitle}>Lives Stolen</h1>
             <p className={styles.pageSubtitle}>
               Inspiring stories from cyclists, pedestrians, and motorcyclists
             </p>

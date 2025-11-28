@@ -30,3 +30,44 @@ model Session {
   collaborator  Boolean?  @default(false)
   emailVerified Boolean?  @default(false)
 }
+
+model Submission {
+  id                    String    @id @default(cuid())
+  shop                  String    // Store domain (example.myshopify.com)
+
+  // Submitter info
+  firstName             String
+  lastName              String
+  email                 String
+
+  // Story content
+  category              String    // "Cyclist", "Pedestrian", "Motorcyclist"
+  date                  String    // When the incident happened
+  location              String    // Where it happened
+  details               String    // Full story text
+  driverAccountable     String?   // Optional follow-up info
+
+  // Files & media
+  imageUrls             String?   // JSON array of image URLs
+
+  // User preferences
+  podcastContact        Boolean   @default(false)
+  permission            Boolean   @default(false)  // Permission to share
+
+  // Shopify integration
+  blogPostId            String?   // Shopify blog post ID
+  blogPostUrl           String?   // URL to the blog post in admin
+
+  // Status tracking
+  status                String    @default("pending")  // "pending", "published", "rejected"
+  adminNotes            String?
+
+  // Timestamps
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  publishedAt           DateTime?
+
+  @@index([shop])
+  @@index([status])
+  @@index([createdAt])
+}

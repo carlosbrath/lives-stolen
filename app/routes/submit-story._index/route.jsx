@@ -1,6 +1,123 @@
-import { useState } from "react";
-import { Link } from "@remix-run/react";
+import { useState, useEffect } from "react";
+import { Link, useActionData, useNavigation } from "@remix-run/react";
+import { json, redirect } from "@remix-run/node";
 import styles from "./styles.module.css";
+import {
+  createBlogPostInShopify,
+  getAccessTokenForStore,
+  formatSubmissionAsHTML,
+  saveSubmissionToDatabase,
+} from "../../services/shopify.server";
+
+export async function action({ request }) {
+  if (request.method !== "POST") {
+    return json({ error: "Method not allowed" }, { status: 405 });
+  }
+
+  try {
+    const formData = await request.formData();
+
+    // Get store from request
+    const url = new URL(request.url);
+    const shop = url.searchParams.get("shop") || process.env.SHOPIFY_SHOP_DOMAIN;
+
+    if (!shop) {
+      return json(
+        { error: "Store information not found" },
+        { status: 400 }
+      );
+    }
+
+    // Extract form data
+    const firstName = formData.get("firstName");
+    const lastName = formData.get("lastName");
+    const email = formData.get("email");
+    const category = formData.get("category");
+    const date = formData.get("date");
+    const location = formData.get("location");
+    const details = formData.get("details");
+    const driverAccountable = formData.get("driverAccountable");
+    const podcast = formData.get("podcast") === "on";
+    const permission = formData.get("permission") === "on";
+
+    // Validate required fields
+    const errors = {};
+    if (!firstName) errors.firstName = "First name is required";
+    if (!lastName) errors.lastName = "Last name is required";
+    if (!email) errors.email = "Email is required";
+    if (!category) errors.category = "Category is required";
+    if (!date) errors.date = "Date is required";
+    if (!location) errors.location = "Location is required";
+    if (!details) errors.details = "Story details are required";
+    if (!permission) errors.permission = "Permission to share is required";
+
+    if (Object.keys(errors).length > 0) {
+      return json({ errors }, { status: 400 });
+    }
+
+    // Get access token for the store
+    const accessToken = await getAccessTokenForStore(shop);
+
+    if (!accessToken) {
+      return json(
+        { error: "Unable to authenticate with Shopify. Please try again." },
+        { status: 401 }
+      );
+    }
+
+    // Format submission data
+    const submissionData = {
+      firstName,
+      lastName,
+      email,
+      category,
+      date,
+      location,
+      details,
+      driverAccountable,
+      podcast,
+      permission,
+    };
+
+    // Create title from story
+    const title = `${category} Story: ${location}`;
+
+    // Create excerpt from details
+    const excerpt = details.substring(0, 160) + (details.length > 160 ? "..." : "");
+
+    // Format HTML for blog post
+    const bodyHtml = formatSubmissionAsHTML(submissionData);
+
+    // Create blog post in Shopify
+    const blogPost = await createBlogPostInShopify(shop, accessToken, {
+      title,
+      body: bodyHtml,
+      excerpt,
+      tags: [category, "Community Story"],
+    });
+
+    // Save submission to database
+    await saveSubmissionToDatabase(shop, submissionData, blogPost);
+
+    return json(
+      {
+        success: true,
+        message: "Your story has been submitted successfully!",
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Form submission error:", error);
+    return json(
+      {
+        error:
+          error.message ||
+          "An error occurred while submitting your story. Please try again.",
+      },
+      { status: 500 }
+    );
+  }
+}
 
 const CATEGORIES = [
   { value: "cyclist", label: "Cyclist" },
@@ -111,6 +228,10 @@ function FormCheckbox({ label, name, checked, onChange }) {
 }
 
 export default function SubmitStoryPage() {
+  const actionData = useActionData();
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -126,8 +247,6 @@ export default function SubmitStoryPage() {
 
   const [files, setFiles] = useState([]);
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -174,96 +293,21 @@ export default function SubmitStoryPage() {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const validateForm = () => {
-    const newErrors = {};
+  // Show errors if action returned errors
+  useEffect(() => {
+    if (actionData?.errors) {
+      setErrors(actionData.errors);
+    }
+  }, [actionData?.errors]);
 
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = "First name is required";
-    }
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
-    }
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-    }
-    if (!formData.category) {
-      newErrors.category = "Please select a category";
-    }
-    if (!formData.date.trim()) {
-      newErrors.date = "Date is required";
-    }
-    if (!formData.location.trim()) {
-      newErrors.location = "Location is required";
-    }
-    if (!formData.details.trim()) {
-      newErrors.details = "Please tell us the details of your story";
-    }
-    if (!formData.permission) {
-      newErrors.permission = "You must give permission to share your story";
-    }
-
-    return newErrors;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const newErrors = validateForm();
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    // Simulate form submission
-    // In a real scenario, this would send data to a Shopify backend endpoint
-    try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // In production, this would POST to Shopify backend
-      console.log("Form submitted:", {
-        ...formData,
-        images: files.length,
-      });
-
-      setSubmitSuccess(true);
-      // Reset form after successful submission
-      setTimeout(() => {
-        setFormData({
-          firstName: "",
-          lastName: "",
-          email: "",
-          category: "",
-          date: "",
-          location: "",
-          details: "",
-          driverAccountable: "",
-          podcast: false,
-          permission: false,
-        });
-        setFiles([]);
-      }, 2000);
-    } catch (error) {
-      setErrors({
-        submit: "Failed to submit your story. Please try again.",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (submitSuccess) {
+  if (actionData?.success) {
     return (
       <div className={styles.container}>
         <div className={styles.successMessage}>
           <div className={styles.successIcon}>✓</div>
           <h2 className={styles.successTitle}>Thank You for Sharing!</h2>
           <p className={styles.successText}>
-            Your story has been submitted successfully. Our team will review it and approve it soon.
+            {actionData?.message || "Your story has been submitted successfully. Our team will review it and approve it soon."}
           </p>
           {formData.podcast && (
             <p className={styles.successText}>
@@ -293,8 +337,8 @@ export default function SubmitStoryPage() {
           </p>
         </header>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
-          {errors.submit && <div className={styles.submitError}>{errors.submit}</div>}
+        <form method="POST" className={styles.form}>
+          {actionData?.error && <div className={styles.submitError}>{actionData.error}</div>}
 
           <div className={styles.formRow}>
             <FormInput
