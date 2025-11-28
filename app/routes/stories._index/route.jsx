@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
-import { useLoaderData, Link } from "@remix-run/react";
+import { useLoaderData, useActionData, useNavigation, Link } from "@remix-run/react";
+import { json } from "@remix-run/node";
+import StorySubmissionForm from "../../components/StorySubmissionForm";
 import styles from "./styles.module.css";
 
 // Dummy story data - expanded with approval status
@@ -11,6 +13,10 @@ const DUMMY_STORIES = [
     state: "California",
     date: "2024-11-15",
     status: "Approved",
+    age: 28,
+    gender: "Male",
+    injuryType: "Fatal",
+    year: "2024",
     images: [
       "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1505594905485-016e32251e01?w=800&h=600&fit=crop",
@@ -27,6 +33,10 @@ const DUMMY_STORIES = [
     state: "New York",
     date: "2024-11-12",
     status: "Approved",
+    age: 45,
+    gender: "Female",
+    injuryType: "Fatal",
+    year: "2024",
     images: [
       "https://images.unsplash.com/photo-1517457373614-b7152f800fd1?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop",
@@ -42,6 +52,10 @@ const DUMMY_STORIES = [
     state: "Texas",
     date: "2024-11-10",
     status: "Approved",
+    age: 32,
+    gender: "Male",
+    injuryType: "Fatal",
+    year: "2024",
     images: [
       "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
@@ -57,6 +71,10 @@ const DUMMY_STORIES = [
     state: "Washington",
     date: "2024-11-08",
     status: "Approved",
+    age: 35,
+    gender: "Female",
+    injuryType: "Fatal",
+    year: "2024",
     images: [
       "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1505594905485-016e32251e01?w=800&h=600&fit=crop",
@@ -72,6 +90,10 @@ const DUMMY_STORIES = [
     state: "Florida",
     date: "2024-11-05",
     status: "Approved",
+    age: 52,
+    gender: "Male",
+    injuryType: "Fatal",
+    year: "2024",
     images: [
       "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1517457373614-b7152f800fd1?w=800&h=600&fit=crop",
@@ -87,6 +109,10 @@ const DUMMY_STORIES = [
     state: "Colorado",
     date: "2024-11-01",
     status: "Approved",
+    age: 29,
+    gender: "Female",
+    injuryType: "Fatal",
+    year: "2024",
     images: [
       "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
@@ -95,288 +121,378 @@ const DUMMY_STORIES = [
       "Took my first long motorcycle trip across the Rocky Mountains. The freedom and views were absolutely incredible. This trip was a turning point for me. I've ridden locally before, but committing to a multi-day journey across some of the most spectacular scenery in the country was transformative.\n\nThe winding mountain roads, the mountain air, the quiet moments in nature—it all made me feel truly alive. I learned a lot about myself and what I'm capable of. Every corner brought new adventures, from unexpected detours to chance meetings with other riders.",
     tags: ["Adventure", "Travel", "Freedom", "Nature"],
   },
-  {
-    id: 7,
-    title: "Cycling for Fitness",
-    category: "Cyclist",
-    state: "Oregon",
-    date: "2024-10-28",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1505594905485-016e32251e01?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Six months of consistent cycling and I've never felt better. It's a fun way to stay active without the gym. When I started, my goal was simple: get in better shape. But cycling quickly became so much more than a fitness tool—it became my favorite part of the day.\n\nThe physical benefits are undeniable: stronger legs, better cardio, improved posture. But the mental benefits are even more impressive. Each ride is a meditation, a chance to clear my head and process my thoughts. Plus, I enjoy riding so much that staying consistent isn't a chore—it's a pleasure.",
-    tags: ["Fitness", "Health", "Wellness", "Lifestyle"],
-  },
-  {
-    id: 8,
-    title: "Safe Pedestrian Infrastructure Works",
-    category: "Pedestrian",
-    state: "Massachusetts",
-    date: "2024-10-25",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1517457373614-b7152f800fd1?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Our city added better crossings and street lighting. The number of pedestrian incidents has dropped significantly. This initiative proves that thoughtful urban planning can save lives. The improvements included more visible crossings with better-lit signage, extended crossing times for elderly pedestrians, and street light upgrades.\n\nThe results speak for themselves. Not only are there fewer incidents, but pedestrians feel more confident and safe. More people are walking, which boosts local business and creates a more vibrant community. It's a win-win investment.",
-    tags: ["Safety", "Infrastructure", "Urban Planning", "Health"],
-  },
-  {
-    id: 9,
-    title: "Motorcycle Maintenance Basics",
-    category: "Motorcyclist",
-    state: "Illinois",
-    date: "2024-10-22",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Learning to maintain my own motorcycle saved me money and gave me a deeper understanding of my bike. Maintenance used to feel intimidating, but breaking it down into simple tasks made it manageable. I started with the basics: oil changes, filter replacements, chain maintenance, and brake checks.\n\nNot only has this saved me hundreds in shop labor, but I now know my bike inside and out. If something goes wrong on the road, I have a fighting chance of fixing it myself. Plus, there's a real satisfaction in keeping my bike running smoothly.",
-    tags: ["Maintenance", "DIY", "Mechanical", "Knowledge"],
-  },
-  {
-    id: 10,
-    title: "Winter Cycling Adventures",
-    category: "Cyclist",
-    state: "Minnesota",
-    date: "2024-10-20",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1505594905485-016e32251e01?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Cycling in winter requires special preparation and gear, but the quiet, snowy rides are magical. Most cyclists hang up their bikes when the temperature drops, but winter riding offers something special. The crisp air, the peacefulness of snowy trails, and the incredible satisfaction of tackling a challenging season—it's worth every bit of preparation.\n\nProperly dressed in layers, with good winter tires and lights, I've discovered a whole new dimension to cycling. Winter riding makes you a better cyclist overall because it demands more skill and awareness.",
-    tags: ["Winter", "Challenge", "Preparation", "Adventure"],
-  },
-  {
-    id: 11,
-    title: "Community Walking Events",
-    category: "Pedestrian",
-    state: "California",
-    date: "2024-10-18",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1517457373614-b7152f800fd1?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Our town organized monthly walking events. It brings neighbors together and builds a stronger community. What started as a simple idea has grown into something truly special. Monthly themed walks bring together dozens of residents, from young children to seniors, all united by a love of walking and community.\n\nThese events have become social touchstones—people look forward to them, friendships form, and newcomers feel welcomed. It's proven that creating opportunities for people to come together can transform a neighborhood.",
-    tags: ["Events", "Community", "Social", "Health"],
-  },
-  {
-    id: 12,
-    title: "Motorcycle Gear That Makes a Difference",
-    category: "Motorcyclist",
-    state: "Arizona",
-    date: "2024-10-15",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Investing in quality protective gear was one of the best decisions I made as a rider. At first, I thought expensive gear was unnecessary. But after my first real accident—thankfully minor—I realized how much protection my gear provided. Had I been wearing inferior equipment, the outcome could have been very different.\n\nNow I'm passionate about gear quality. A good helmet, jacket, gloves, and boots aren't just safety equipment—they're peace of mind. They allow you to ride with confidence knowing you're protected.",
-    tags: ["Safety", "Gear", "Protection", "Investment"],
-  },
 ];
 
 export const loader = async () => {
   return { stories: DUMMY_STORIES };
 };
 
+export async function action({ request }) {
+  if (request.method !== "POST") {
+    return json({ error: "Method not allowed" }, { status: 405 });
+  }
+
+  try {
+    const formData = await request.formData();
+
+    // Extract form data
+    const submitterName = formData.get("submitterName");
+    const submitterEmail = formData.get("submitterEmail");
+    const victimName = formData.get("victimName");
+    const relation = formData.get("relation");
+    const incidentDate = formData.get("incidentDate");
+    const state = formData.get("state");
+    const roadUserType = formData.get("roadUserType");
+    const injuryType = formData.get("injuryType");
+    const age = formData.get("age");
+    const gender = formData.get("gender");
+    const shortTitle = formData.get("shortTitle");
+    const victimStory = formData.get("victimStory");
+
+    // Validate required fields
+    const errors = {};
+    if (!submitterName) errors.submitterName = "Submitter name is required";
+    if (!submitterEmail) errors.submitterEmail = "Submitter email is required";
+    if (!incidentDate) errors.incidentDate = "Incident date is required";
+    if (!state) errors.state = "State is required";
+    if (!roadUserType) errors.roadUserType = "Road user type is required";
+    if (!injuryType) errors.injuryType = "Injury type is required";
+    if (!shortTitle) errors.shortTitle = "Short title is required";
+    if (!victimStory) errors.victimStory = "Victim's story is required";
+
+    if (Object.keys(errors).length > 0) {
+      return json({ errors }, { status: 400 });
+    }
+
+    // Here you would save to database/Shopify
+    // For now, just return success
+    return json(
+      {
+        success: true,
+        message: "Your submission has been received. Thank you for sharing this story.",
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Form submission error:", error);
+    return json(
+      {
+        error: "An error occurred while submitting. Please try again.",
+      },
+      { status: 500 }
+    );
+  }
+}
+
 export const meta = () => [
-  { title: "Stories | Story Submission" },
+  { title: "Lives Stolen | Fatal Collisions" },
   {
     name: "description",
-    content: "Read inspiring stories from cyclists, pedestrians, and motorcyclists",
+    content: "Remembering lives lost in traffic collisions",
   },
 ];
 
-function StoryCard({ story }) {
-  const categoryColor = {
-    Cyclist: "#3b82f6",
-    Pedestrian: "#10b981",
-    Motorcyclist: "#f59e0b",
-  };
-
+function MemorialCard({ story }) {
   return (
-    <Link to={`/stories/${story.id}`} className={styles.storyCardLink}>
-      <div className={styles.storyCard}>
-        <div className={styles.cardImage}>
-          <img src={story.images[0]} alt={story.title} />
-          <span
-            className={styles.categoryBadge}
-            style={{ backgroundColor: categoryColor[story.category] }}
-          >
-            {story.category}
-          </span>
+    <Link to={`/stories/${story.id}`} className={styles.memorialCard}>
+      <div className={styles.silhouetteContainer}>
+        <div className={styles.silhouette}>
+          {/* Placeholder silhouette - in production, you'd use actual silhouette images */}
+          <svg viewBox="0 0 200 200" className={styles.silhouetteSvg}>
+            <circle cx="100" cy="70" r="35" />
+            <ellipse cx="100" cy="150" rx="50" ry="60" />
+          </svg>
         </div>
-        <div className={styles.cardContent}>
-          <h3 className={styles.cardTitle}>{story.title}</h3>
-          <p className={styles.cardDescription}>{story.description}</p>
-          <div className={styles.cardMeta}>
-            <span className={styles.state}>{story.state}</span>
-            <span className={styles.date}>
-              {new Date(story.date).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
-          </div>
+      </div>
+      <div className={styles.memorialInfo}>
+        <div className={styles.memorialName}>{story.title}</div>
+        <div className={styles.memorialDetails}>
+          {story.age} • {story.gender} • {story.category}
+        </div>
+        <div className={styles.memorialLocation}>
+          {story.state} • {story.year}
         </div>
       </div>
     </Link>
   );
 }
 
-function SearchAndFilters({ searchTerm, onSearchChange, filters, onFilterChange, onClearFilters }) {
-  const categories = ["Cyclist", "Pedestrian", "Motorcyclist"];
-  const statuses = ["Approved"];
+function FilterPanel({ filters, onFilterChange, onClearFilters }) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState({});
 
-  const dateRanges = [
-    { label: "Last 7 days", value: "7days" },
-    { label: "Last 30 days", value: "30days" },
-    { label: "Last 90 days", value: "90days" },
-    { label: "All time", value: "all" },
-  ];
+  const roadUserTypes = ["Cyclist", "Pedestrian", "Motorcyclist"];
+  const ageRanges = ["0-17", "18-30", "31-45", "46-60", "60+"];
+  const genders = ["Male", "Female", "Other"];
+  const injuryTypes = ["Fatal"];
+  const states = ["California", "New York", "Texas", "Washington", "Florida", "Colorado"];
+  const years = ["2024", "2023", "2022", "2021"];
 
-  const hasActiveFilters = searchTerm || filters.category || filters.dateRange || filters.status;
+  const hasActiveFilters =
+    filters.roadUserType ||
+    filters.ageRange ||
+    filters.gender ||
+    filters.injuryType ||
+    filters.state ||
+    filters.year;
+
+  const toggleGroup = (groupName) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [groupName]: !prev[groupName],
+    }));
+  };
+
+  const handleClickOutside = (e) => {
+    if (!e.target.closest(`.${styles.filterContainer}`)) {
+      setIsDropdownOpen(false);
+    }
+  };
 
   return (
-    <div className={styles.filterSection}>
-      <div className={styles.searchBox}>
-        <input
-          type="text"
-          className={styles.searchInput}
-          placeholder="Search stories by title or keyword..."
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
-        <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.35-4.35" />
+    <div className={styles.filterContainer}>
+      {/* Filter Toggle Button */}
+      <button
+        className={styles.filterToggleButton}
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M3 6h18M7 12h10M10 18h4" />
         </svg>
-      </div>
+        Filter
+      </button>
 
-      <div className={styles.filtersContainer}>
-        <div className={styles.filterGroup}>
-          <label className={styles.filterLabel}>Category</label>
-          <select
-            className={styles.filterSelect}
-            value={filters.category || ""}
-            onChange={(e) => onFilterChange("category", e.target.value || null)}
-          >
-            <option value="">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* Filter Dropdown */}
+      {isDropdownOpen && (
+        <>
+          <div className={styles.filterDropdown}>
+            <div className={styles.filterGroup}>
+              <button
+                className={`${styles.filterButton} ${expandedGroups.roadUserType ? styles.filterButtonExpanded : ''}`}
+                onClick={() => toggleGroup('roadUserType')}
+              >
+                <span>Road-user type</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              <div className={`${styles.filterOptions} ${expandedGroups.roadUserType ? styles.filterOptionsExpanded : ''}`}>
+                {roadUserTypes.map((type) => (
+                  <label key={type} className={styles.filterOption}>
+                    <input
+                      type="checkbox"
+                      checked={filters.roadUserType === type}
+                      onChange={(e) =>
+                        onFilterChange("roadUserType", e.target.checked ? type : null)
+                      }
+                    />
+                    <span>{type}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
 
-        <div className={styles.filterGroup}>
-          <label className={styles.filterLabel}>Date Range</label>
-          <select
-            className={styles.filterSelect}
-            value={filters.dateRange || "all"}
-            onChange={(e) => onFilterChange("dateRange", e.target.value)}
-          >
-            {dateRanges.map((range) => (
-              <option key={range.value} value={range.value}>
-                {range.label}
-              </option>
-            ))}
-          </select>
-        </div>
+            <div className={styles.filterGroup}>
+              <button
+                className={`${styles.filterButton} ${expandedGroups.ageRange ? styles.filterButtonExpanded : ''}`}
+                onClick={() => toggleGroup('ageRange')}
+              >
+                <span>Age range</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              <div className={`${styles.filterOptions} ${expandedGroups.ageRange ? styles.filterOptionsExpanded : ''}`}>
+                {ageRanges.map((range) => (
+                  <label key={range} className={styles.filterOption}>
+                    <input
+                      type="checkbox"
+                      checked={filters.ageRange === range}
+                      onChange={(e) =>
+                        onFilterChange("ageRange", e.target.checked ? range : null)
+                      }
+                    />
+                    <span>{range}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
 
-        <div className={styles.filterGroup}>
-          <label className={styles.filterLabel}>Approval Status</label>
-          <select
-            className={styles.filterSelect}
-            value={filters.status || "Approved"}
-            onChange={(e) => onFilterChange("status", e.target.value)}
-          >
-            {statuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-        </div>
+            <div className={styles.filterGroup}>
+              <button
+                className={`${styles.filterButton} ${expandedGroups.gender ? styles.filterButtonExpanded : ''}`}
+                onClick={() => toggleGroup('gender')}
+              >
+                <span>Gender</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              <div className={`${styles.filterOptions} ${expandedGroups.gender ? styles.filterOptionsExpanded : ''}`}>
+                {genders.map((gender) => (
+                  <label key={gender} className={styles.filterOption}>
+                    <input
+                      type="checkbox"
+                      checked={filters.gender === gender}
+                      onChange={(e) =>
+                        onFilterChange("gender", e.target.checked ? gender : null)
+                      }
+                    />
+                    <span>{gender}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
 
-        {hasActiveFilters && (
-          <button className={styles.clearButton} onClick={onClearFilters}>
-            Clear Filters
-          </button>
-        )}
-      </div>
+            <div className={styles.filterGroup}>
+              <button
+                className={`${styles.filterButton} ${expandedGroups.injuryType ? styles.filterButtonExpanded : ''}`}
+                onClick={() => toggleGroup('injuryType')}
+              >
+                <span>Injury type</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              <div className={`${styles.filterOptions} ${expandedGroups.injuryType ? styles.filterOptionsExpanded : ''}`}>
+                {injuryTypes.map((type) => (
+                  <label key={type} className={styles.filterOption}>
+                    <input
+                      type="checkbox"
+                      checked={filters.injuryType === type}
+                      onChange={(e) =>
+                        onFilterChange("injuryType", e.target.checked ? type : null)
+                      }
+                    />
+                    <span>{type}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.filterGroup}>
+              <button
+                className={`${styles.filterButton} ${expandedGroups.state ? styles.filterButtonExpanded : ''}`}
+                onClick={() => toggleGroup('state')}
+              >
+                <span>State</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              <div className={`${styles.filterOptions} ${expandedGroups.state ? styles.filterOptionsExpanded : ''}`}>
+                {states.map((state) => (
+                  <label key={state} className={styles.filterOption}>
+                    <input
+                      type="checkbox"
+                      checked={filters.state === state}
+                      onChange={(e) =>
+                        onFilterChange("state", e.target.checked ? state : null)
+                      }
+                    />
+                    <span>{state}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.filterGroup}>
+              <button
+                className={`${styles.filterButton} ${expandedGroups.year ? styles.filterButtonExpanded : ''}`}
+                onClick={() => toggleGroup('year')}
+              >
+                <span>Year</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              <div className={`${styles.filterOptions} ${expandedGroups.year ? styles.filterOptionsExpanded : ''}`}>
+                {years.map((year) => (
+                  <label key={year} className={styles.filterOption}>
+                    <input
+                      type="checkbox"
+                      checked={filters.year === year}
+                      onChange={(e) =>
+                        onFilterChange("year", e.target.checked ? year : null)
+                      }
+                    />
+                    <span>{year}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {hasActiveFilters && (
+              <button className={styles.clearFiltersButton} onClick={onClearFilters}>
+                Clear all filters
+              </button>
+            )}
+          </div>
+
+          <div
+            className={styles.filterOverlay}
+            onClick={() => setIsDropdownOpen(false)}
+            style={{ display: 'block', position: 'fixed', inset: 0, zIndex: 50 }}
+          />
+        </>
+      )}
     </div>
   );
 }
 
 export default function StoriesPage() {
   const { stories } = useLoaderData();
-  const [searchTerm, setSearchTerm] = useState("");
+  const actionData = useActionData();
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
+
   const [filters, setFilters] = useState({
-    category: null,
-    dateRange: "all",
-    status: "Approved",
+    roadUserType: null,
+    ageRange: null,
+    gender: null,
+    injuryType: "Fatal",
+    state: null,
+    year: null,
   });
-  const [displayCount, setDisplayCount] = useState(6);
+  const [displayCount, setDisplayCount] = useState(12);
 
-  const ITEMS_PER_PAGE = 6;
+  const ITEMS_PER_PAGE = 12;
 
-  // Filter and search logic
+  // Filter logic
   const filteredStories = useMemo(() => {
     return stories.filter((story) => {
-      // Search filter
-      if (
-        searchTerm &&
-        !story.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !story.description.toLowerCase().includes(searchTerm.toLowerCase())
-      ) {
+      if (filters.roadUserType && story.category !== filters.roadUserType) {
         return false;
       }
 
-      // Category filter
-      if (filters.category && story.category !== filters.category) {
-        return false;
-      }
-
-      // Status filter
-      if (story.status !== filters.status) {
-        return false;
-      }
-
-      // Date range filter
-      if (filters.dateRange !== "all") {
-        const storyDate = new Date(story.date);
-        const now = new Date();
-        const daysDiff = Math.floor((now - storyDate) / (1000 * 60 * 60 * 24));
-
-        const daysLimit = {
-          "7days": 7,
-          "30days": 30,
-          "90days": 90,
-        };
-
-        if (daysDiff > daysLimit[filters.dateRange]) {
+      if (filters.ageRange) {
+        const [min, max] = filters.ageRange.includes("+")
+          ? [parseInt(filters.ageRange), Infinity]
+          : filters.ageRange.split("-").map(Number);
+        if (story.age < min || story.age > max) {
           return false;
         }
       }
 
+      if (filters.gender && story.gender !== filters.gender) {
+        return false;
+      }
+
+      if (filters.injuryType && story.injuryType !== filters.injuryType) {
+        return false;
+      }
+
+      if (filters.state && story.state !== filters.state) {
+        return false;
+      }
+
+      if (filters.year && story.year !== filters.year) {
+        return false;
+      }
+
       return true;
     });
-  }, [searchTerm, filters]);
+  }, [stories, filters]);
 
   const displayedStories = filteredStories.slice(0, displayCount);
   const hasMoreStories = displayCount < filteredStories.length;
@@ -386,20 +502,17 @@ export default function StoriesPage() {
       ...prev,
       [filterName]: value,
     }));
-    setDisplayCount(ITEMS_PER_PAGE); // Reset pagination on filter change
-  };
-
-  const handleSearchChange = (value) => {
-    setSearchTerm(value);
-    setDisplayCount(ITEMS_PER_PAGE); // Reset pagination on search
+    setDisplayCount(ITEMS_PER_PAGE);
   };
 
   const handleClearFilters = () => {
-    setSearchTerm("");
     setFilters({
-      category: null,
-      dateRange: "all",
-      status: "Approved",
+      roadUserType: null,
+      ageRange: null,
+      gender: null,
+      injuryType: "Fatal",
+      state: null,
+      year: null,
     });
     setDisplayCount(ITEMS_PER_PAGE);
   };
@@ -408,57 +521,80 @@ export default function StoriesPage() {
     setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
   };
 
-  return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerTop}>
-          <div>
-            <h1 className={styles.pageTitle}>Lives Stolen</h1>
-            <p className={styles.pageSubtitle}>
-              Inspiring stories from cyclists, pedestrians, and motorcyclists
+  // Show success message if form was submitted successfully
+  if (actionData?.success) {
+    return (
+      <div className={styles.pageContainer}>
+        <div className={styles.successOverlay}>
+          <div className={styles.successCard}>
+            <div className={styles.successIcon}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+            </div>
+            <h2 className={styles.successTitle}>Thank You!</h2>
+            <p className={styles.successMessage}>
+              {actionData?.message || "Your submission has been received. We appreciate you sharing this story."}
             </p>
+            <Link to="/stories" className={styles.successButton}>
+              Return to Memorial Wall
+            </Link>
           </div>
-          <Link to="/submit-story" className={styles.submitButton}>
-            + Share Your Story
-          </Link>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.pageContainer}>
+      <header className={styles.pageHeader}>
+        <h1 className={styles.mainTitle}>Lives Stolen</h1>
+        <p className={styles.subtitle}>Fatal Collisions</p>
       </header>
 
-      <SearchAndFilters
-        searchTerm={searchTerm}
-        onSearchChange={handleSearchChange}
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onClearFilters={handleClearFilters}
-      />
+      <div className={styles.contentWrapper}>
+        <FilterPanel
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onClearFilters={handleClearFilters}
+        />
 
-      {filteredStories.length === 0 ? (
-        <div className={styles.emptyState}>
-          <p className={styles.emptyStateText}>
-            No stories found. Try adjusting your filters or search term.
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className={styles.resultsCount}>
-            Showing {displayedStories.length} of {filteredStories.length} stories
-          </div>
-
-          <div className={styles.storiesGrid}>
-            {displayedStories.map((story) => (
-              <StoryCard key={story.id} story={story} />
-            ))}
-          </div>
-
-          {hasMoreStories && (
-            <div className={styles.paginationContainer}>
-              <button className={styles.loadMoreButton} onClick={handleLoadMore}>
-                Load More Stories
-              </button>
+        <div className={styles.memorialsSection}>
+          {filteredStories.length === 0 ? (
+            <div className={styles.emptyState}>
+              <p>No memorials found matching your filters.</p>
             </div>
+          ) : (
+            <>
+              <div className={styles.memorialsGrid}>
+                {displayedStories.map((story) => (
+                  <MemorialCard key={story.id} story={story} />
+                ))}
+              </div>
+
+              {hasMoreStories && (
+                <div className={styles.loadMoreContainer}>
+                  <button className={styles.loadMoreButton} onClick={handleLoadMore}>
+                    Load More
+                  </button>
+                </div>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+      </div>
+
+      {/* Submit Story Form Section */}
+      <section className={styles.formSectionWrapper} id="submit-story">
+        <div className={styles.formSectionHeader}>
+          <h2 className={styles.formSectionTitle}>Lost someone you love to traffic violence?</h2>
+          <p className={styles.formSectionSubtitle}>Honor their memory. Share their story.</p>
+        </div>
+        <StorySubmissionForm
+          isSubmitting={isSubmitting}
+          actionData={actionData}
+        />
+      </section>
     </div>
   );
 }

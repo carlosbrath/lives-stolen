@@ -1,11 +1,7 @@
-* {
-  box-sizing: border-box;
-}
-
-.container {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 40px 20px;
+/* Page Container */
+.pageContainer {
+  min-height: 100vh;
+  background: #000000;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
@@ -13,468 +9,182 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.formWrapper {
-  background: #fff;
-  border-radius: 8px;
-  padding: 40px;
+/* Page Header */
+.pageHeader {
+  background: #000000;
+  padding: 60px 20px 40px;
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 .backLink {
-  display: inline-block;
-  margin-bottom: 32px;
-  color: #0066cc;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
   text-decoration: none;
+  font-size: 0.95rem;
   font-weight: 500;
-  transition: color 0.2s ease;
+  margin-bottom: 32px;
+  transition: all 0.2s ease;
 }
 
 .backLink:hover {
-  color: #0052a3;
-  text-decoration: underline;
+  color: #cccccc;
+  transform: translateX(-4px);
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 40px;
-  padding-bottom: 30px;
-  border-bottom: 2px solid #f0f0f0;
+.backLink svg {
+  width: 20px;
+  height: 20px;
 }
 
 .pageTitle {
-  margin: 0 0 12px 0;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  letter-spacing: -0.5px;
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #ffffff;
+  margin: 0 0 16px 0;
+  line-height: 1.2;
 }
 
 .pageSubtitle {
+  font-size: 1.15rem;
+  color: #cccccc;
   margin: 0;
-  font-size: 0.95rem;
-  color: #666;
-  font-weight: 400;
-  line-height: 1.6;
-}
-
-/* Form Elements */
-.form {
-  display: flex;
-  flex-direction: column;
-}
-
-.formGroup {
-  margin-bottom: 24px;
-  display: flex;
-  flex-direction: column;
-}
-
-.formLabel {
-  margin-bottom: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.required {
-  color: #e53e3e;
-  margin-left: 2px;
-}
-
-.formInput,
-.formSelect,
-.formTextarea {
-  padding: 12px 16px;
-  font-size: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-family: inherit;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  background-color: #fff;
-}
-
-.formInput:focus,
-.formSelect:focus,
-.formTextarea:focus {
-  outline: none;
-  border-color: #0066cc;
-  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
-}
-
-.formInput::placeholder,
-.formTextarea::placeholder {
-  color: #999;
-}
-
-.formSelect {
-  cursor: pointer;
-}
-
-.formTextarea {
-  resize: vertical;
-  min-height: 150px;
   line-height: 1.5;
 }
 
-.inputError {
-  border-color: #e53e3e !important;
-  background-color: #fff5f5;
-}
-
-.errorMessage {
-  margin: 6px 0 0 0;
-  font-size: 0.85rem;
-  color: #e53e3e;
-}
-
-/* Form Row */
-.formRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-/* File Upload */
-.fileHelp {
-  margin: 0 0 12px 0;
-  font-size: 0.85rem;
-  color: #666;
-}
-
-.fileInput {
-  padding: 12px;
-  border: 2px dashed #ddd;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-  display: block;
-  width: 100%;
-}
-
-.fileInput:hover {
-  border-color: #0066cc;
-  background-color: #f8faff;
-}
-
-.fileInput:focus {
-  outline: none;
-  border-color: #0066cc;
-  background-color: #f8faff;
-}
-
-.fileList {
-  margin-top: 16px;
-  padding: 16px;
-  background-color: #f8f9fa;
-  border-radius: 6px;
-  border: 1px solid #e9ecef;
-}
-
-.fileListTitle {
-  margin: 0 0 12px 0;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #333;
-}
-
-.files {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.fileItem {
+/* Success Container */
+.successContainer {
+  min-height: 100vh;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  background-color: #fff;
-  border-radius: 4px;
-  margin-bottom: 8px;
-  border: 1px solid #e9ecef;
+  justify-content: center;
+  padding: 40px 20px;
+  background: #000000;
 }
 
-.fileItem:last-child {
-  margin-bottom: 0;
-}
-
-.fileName {
-  font-size: 0.9rem;
-  color: #666;
-  word-break: break-word;
-  flex-grow: 1;
-  margin-right: 8px;
-}
-
-.removeButton {
-  padding: 4px 8px;
-  background-color: transparent;
-  border: none;
-  color: #e53e3e;
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: color 0.2s ease;
-  line-height: 1;
-}
-
-.removeButton:hover {
-  color: #c53030;
-}
-
-/* Checkbox */
-.checkboxGroup {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.formCheckbox {
-  width: 20px;
-  height: 20px;
-  margin-top: 2px;
-  cursor: pointer;
-  accent-color: #0066cc;
-  flex-shrink: 0;
-}
-
-.checkboxLabel {
-  font-size: 0.95rem;
-  color: #333;
-  cursor: pointer;
-  line-height: 1.5;
-}
-
-/* Submit Button */
-.submitButton {
-  padding: 14px 24px;
-  background-color: #0066cc;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-  margin-top: 24px;
-  font-family: inherit;
-}
-
-.submitButton:hover:not(:disabled) {
-  background-color: #0052a3;
-}
-
-.submitButton:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.submitButton:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-/* Error Message */
-.submitError {
-  padding: 12px 16px;
-  background-color: #fff5f5;
-  border: 1px solid #e53e3e;
-  border-radius: 6px;
-  color: #e53e3e;
-  margin-bottom: 24px;
-  font-size: 0.95rem;
-}
-
-/* Success Message */
-.successMessage {
+.successContent {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 60px 40px;
+  max-width: 500px;
+  width: 100%;
   text-align: center;
-  padding: 60px 20px;
-  background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
-  border-radius: 8px;
-  border: 2px solid #10b981;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
 }
 
 .successIcon {
-  font-size: 3rem;
-  color: #10b981;
-  margin-bottom: 20px;
+  width: 80px;
+  height: 80px;
+  background: #22c55e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.successIcon svg {
+  width: 48px;
+  height: 48px;
+  stroke: #ffffff;
 }
 
 .successTitle {
-  margin: 0 0 16px 0;
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #000000;
+  margin: 0 0 16px 0;
 }
 
 .successText {
-  margin: 0 0 12px 0;
-  font-size: 1rem;
-  color: #666;
+  font-size: 1.05rem;
+  color: #333333;
   line-height: 1.6;
+  margin: 0 0 32px 0;
 }
 
-.successLink {
+.successButton {
   display: inline-block;
-  margin-top: 24px;
-  padding: 12px 24px;
-  background-color: #0066cc;
-  color: white;
+  padding: 14px 32px;
+  background: #000000;
+  color: #ffffff;
   text-decoration: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: 600;
-  transition: background-color 0.2s ease;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  border: 2px solid #000000;
 }
 
-.successLink:hover {
-  background-color: #0052a3;
+.successButton:hover {
+  background: #1a1a1a;
+  border-color: #1a1a1a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .container {
-    padding: 24px 16px;
-  }
-
-  .formWrapper {
-    padding: 24px;
+  .pageHeader {
+    padding: 40px 16px 32px;
   }
 
   .pageTitle {
-    font-size: 1.6rem;
+    font-size: 2rem;
   }
 
-  .formRow {
-    grid-template-columns: 1fr;
-    gap: 0;
+  .pageSubtitle {
+    font-size: 1rem;
   }
 
-  .fileInput {
-    padding: 20px;
-  }
-
-  .successMessage {
-    padding: 40px 20px;
+  .successContent {
+    padding: 40px 24px;
   }
 
   .successIcon {
-    font-size: 2.5rem;
+    width: 64px;
+    height: 64px;
+  }
+
+  .successIcon svg {
+    width: 36px;
+    height: 36px;
   }
 
   .successTitle {
-    font-size: 1.4rem;
+    font-size: 1.75rem;
+  }
+
+  .successText {
+    font-size: 1rem;
   }
 }
 
 @media (max-width: 480px) {
-  .container {
-    padding: 20px 12px;
-  }
-
-  .formWrapper {
-    padding: 20px;
-    border-radius: 6px;
-  }
-
-  .backLink {
-    font-size: 0.9rem;
-    margin-bottom: 24px;
-  }
-
-  .header {
-    margin-bottom: 32px;
-    padding-bottom: 24px;
+  .pageHeader {
+    padding: 32px 12px 24px;
   }
 
   .pageTitle {
-    font-size: 1.4rem;
-    margin-bottom: 10px;
+    font-size: 1.75rem;
   }
 
   .pageSubtitle {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
   }
 
-  .formGroup {
-    margin-bottom: 20px;
-  }
-
-  .formLabel {
-    font-size: 0.9rem;
-  }
-
-  .formInput,
-  .formSelect,
-  .formTextarea {
-    padding: 10px 12px;
-    font-size: 16px; /* Prevents zoom on iOS */
-  }
-
-  .formTextarea {
-    min-height: 120px;
-  }
-
-  .checkboxGroup {
-    gap: 10px;
-  }
-
-  .formCheckbox {
-    width: 18px;
-    height: 18px;
-  }
-
-  .checkboxLabel {
-    font-size: 0.9rem;
-  }
-
-  .submitButton {
-    width: 100%;
-    padding: 12px 16px;
-    margin-top: 20px;
-  }
-
-  .fileHelp {
-    font-size: 0.8rem;
-  }
-
-  .fileList {
-    padding: 12px;
-  }
-
-  .fileItem {
-    padding: 8px 10px;
-  }
-
-  .removeButton {
-    padding: 2px 6px;
-    font-size: 1.25rem;
-  }
-
-  .submitError {
-    padding: 10px 12px;
-    font-size: 0.9rem;
-  }
-
-  .successMessage {
-    padding: 30px 16px;
-  }
-
-  .successIcon {
-    font-size: 2rem;
-    margin-bottom: 16px;
+  .successContent {
+    padding: 32px 20px;
   }
 
   .successTitle {
-    font-size: 1.2rem;
-    margin-bottom: 12px;
+    font-size: 1.5rem;
   }
 
-  .successText {
-    font-size: 0.9rem;
-    margin-bottom: 10px;
-  }
-
-  .successLink {
-    display: block;
-    padding: 10px 16px;
-    font-size: 0.9rem;
+  .successButton {
+    width: 100%;
   }
 }
