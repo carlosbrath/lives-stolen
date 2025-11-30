@@ -33,33 +33,38 @@ model Session {
 
 model Submission {
   id                    String    @id @default(cuid())
-  shop                  String    // Store domain (example.myshopify.com)
+  shop                  String    @default("public")  // Store domain or "public" for non-shopify
 
   // Submitter info
-  firstName             String
-  lastName              String
-  email                 String
+  submitterName         String
+  submitterEmail        String
+
+  // Victim info
+  victimName            String?
+  relation              String?
+  age                   Int?
+  gender                String?
+
+  // Incident info
+  incidentDate          String
+  state                 String
+  roadUserType          String    // "Cyclist", "Pedestrian", "Motorcyclist"
+  injuryType            String    // "Fatal", "Non-fatal"
 
   // Story content
-  category              String    // "Cyclist", "Pedestrian", "Motorcyclist"
-  date                  String    // When the incident happened
-  location              String    // Where it happened
-  details               String    // Full story text
-  driverAccountable     String?   // Optional follow-up info
+  shortTitle            String
+  victimStory           String
 
   // Files & media
-  imageUrls             String?   // JSON array of image URLs
-
-  // User preferences
-  podcastContact        Boolean   @default(false)
-  permission            Boolean   @default(false)  // Permission to share
+  photoUrls             String?   // JSON array of photo URLs
 
   // Shopify integration
-  blogPostId            String?   // Shopify blog post ID
-  blogPostUrl           String?   // URL to the blog post in admin
+  metaobjectId          String?   // Shopify metaobject ID
+  blogPostId            String?   // Shopify blog post ID (legacy)
+  blogPostUrl           String?   // URL to the blog post in admin (legacy)
 
   // Status tracking
-  status                String    @default("pending")  // "pending", "published", "rejected"
+  status                String    @default("pending")  // "pending", "approved", "published", "rejected"
   adminNotes            String?
 
   // Timestamps
@@ -70,4 +75,6 @@ model Submission {
   @@index([shop])
   @@index([status])
   @@index([createdAt])
+  @@index([state])
+  @@index([roadUserType])
 }

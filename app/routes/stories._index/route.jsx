@@ -1,130 +1,50 @@
 import { useState, useMemo } from "react";
 import { useLoaderData, useActionData, useNavigation, Link } from "@remix-run/react";
 import { json } from "@remix-run/node";
+import { authenticate } from "../../shopify.server";
+import { createStoryMetaobject } from "../../services/metaobjects.server";
+import prisma from "../../db.server";
 import StorySubmissionForm from "../../components/StorySubmissionForm";
 import styles from "./styles.module.css";
 
-// Dummy story data - expanded with approval status
-const DUMMY_STORIES = [
-  {
-    id: 1,
-    title: "My First Bike Commute Experience",
-    category: "Cyclist",
-    state: "California",
-    date: "2024-11-15",
-    status: "Approved",
-    age: 28,
-    gender: "Male",
-    injuryType: "Fatal",
-    year: "2024",
-    images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1505594905485-016e32251e01?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Started cycling to work three months ago and it completely changed my daily routine. The morning rides help me stay fit and reduce my carbon footprint. What began as a simple way to save money on gas has evolved into a passion that's transformed my daily commute into something I look forward to.\n\nThe first few weeks were challenging. My legs were sore, and the weather was unpredictable. But I persisted, and soon my body adapted. Now, three months in, I feel stronger and more energized than ever before. The fresh air, the physical exercise, and the connection with nature has had profound benefits on my mental health.\n\nI've also discovered a wonderful cycling community in my area. Weekly group rides, maintenance workshops, and casual coffee meetups have made this journey even more rewarding. If you're thinking about cycling to work, I highly recommend it. Start small, invest in a decent bike, and don't be afraid to ask experienced cyclists for advice.",
-    tags: ["Commute", "Fitness", "Environment", "Community"],
-  },
-  {
-    id: 2,
-    title: "Walking Through Downtown Changes",
-    category: "Pedestrian",
-    state: "New York",
-    date: "2024-11-12",
-    status: "Approved",
-    age: 45,
-    gender: "Female",
-    injuryType: "Fatal",
-    year: "2024",
-    images: [
-      "https://images.unsplash.com/photo-1517457373614-b7152f800fd1?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop",
-    ],
-    description:
-      "The new pedestrian pathways downtown have made walking safer and more enjoyable. More people are using the streets now. The city invested heavily in infrastructure improvements, including wider sidewalks, dedicated crossing zones, and better lighting. The transformation has been remarkable—not only do I feel safer walking at night, but the entire downtown area has become more vibrant and welcoming.\n\nWalking used to feel like a necessity, something I did to get from point A to B. Now it's become an experience. I notice architectural details I never saw before, stop for coffee at local cafes, and regularly bump into neighbors. The pedestrian-first approach has encouraged more people to explore downtown on foot.",
-    tags: ["Infrastructure", "Safety", "Urban Design", "Community"],
-  },
-  {
-    id: 3,
-    title: "Motorcycle Safety Tips That Saved My Life",
-    category: "Motorcyclist",
-    state: "Texas",
-    date: "2024-11-10",
-    status: "Approved",
-    age: 32,
-    gender: "Male",
-    injuryType: "Fatal",
-    year: "2024",
-    images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Learning proper motorcycle safety techniques gave me the confidence to ride more. Always wear proper gear and stay alert. A close call on the highway made me realize how important safety practices really are. After taking a professional safety course, I learned techniques that literally changed everything.\n\nThe most critical lessons: always wear a full helmet, protective jacket, gloves, and boots. Practice emergency braking and cornering. Be visible—use reflective gear and keep your lights on. Most importantly, never ride impaired or distracted. These fundamentals have made me a better, more confident rider.",
-    tags: ["Safety", "Training", "Gear", "Prevention"],
-  },
-  {
-    id: 4,
-    title: "Urban Cycling Culture",
-    category: "Cyclist",
-    state: "Washington",
-    date: "2024-11-08",
-    status: "Approved",
-    age: 35,
-    gender: "Female",
-    injuryType: "Fatal",
-    year: "2024",
-    images: [
-      "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1505594905485-016e32251e01?w=800&h=600&fit=crop",
-    ],
-    description:
-      "The cycling community in Seattle is amazing. From group rides to bike maintenance workshops, there's always something happening. Seattle has embraced cycling culture in a way that's truly inspiring. The city has invested in bike infrastructure, but more importantly, the community itself is supportive and welcoming to cyclists of all levels.\n\nWhether you're a casual commuter or a serious enthusiast, there's a place for you. I've made friends through cycling meetups, learned repair skills at community workshops, and discovered new routes on guided rides. It's not just about the bikes—it's about the people and the shared passion for sustainable, healthy transportation.",
-    tags: ["Community", "Culture", "Infrastructure", "Social"],
-  },
-  {
-    id: 5,
-    title: "Walking and Social Connection",
-    category: "Pedestrian",
-    state: "Florida",
-    date: "2024-11-05",
-    status: "Approved",
-    age: 52,
-    gender: "Male",
-    injuryType: "Fatal",
-    year: "2024",
-    images: [
-      "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1517457373614-b7152f800fd1?w=800&h=600&fit=crop",
-    ],
-    description:
-      "I started walking in my neighborhood and discovered a whole community. It's amazing how walking creates connections. Before I committed to daily walks, I knew my neighbors only by sight. But walking regularly through the same streets at the same times changed that completely.\n\nI began stopping to chat, joining neighborhood walking groups, and becoming part of something larger than myself. Walking has a way of slowing you down enough to notice people and places. It builds genuine connections that are rare in our fast-paced world.",
-    tags: ["Community", "Mental Health", "Neighborhood", "Connection"],
-  },
-  {
-    id: 6,
-    title: "Road Trip on Two Wheels",
-    category: "Motorcyclist",
-    state: "Colorado",
-    date: "2024-11-01",
-    status: "Approved",
-    age: 29,
-    gender: "Female",
-    injuryType: "Fatal",
-    year: "2024",
-    images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Took my first long motorcycle trip across the Rocky Mountains. The freedom and views were absolutely incredible. This trip was a turning point for me. I've ridden locally before, but committing to a multi-day journey across some of the most spectacular scenery in the country was transformative.\n\nThe winding mountain roads, the mountain air, the quiet moments in nature—it all made me feel truly alive. I learned a lot about myself and what I'm capable of. Every corner brought new adventures, from unexpected detours to chance meetings with other riders.",
-    tags: ["Adventure", "Travel", "Freedom", "Nature"],
-  },
-];
-
 export const loader = async () => {
-  return { stories: DUMMY_STORIES };
+  try {
+    // Fetch recently added pending stories from database
+    const submissions = await prisma.submission.findMany({
+      where: {
+        status: 'pending', // Show only pending stories
+      },
+      orderBy: {
+        createdAt: "desc", // Most recent first
+      },
+    });
+
+    // Transform database submissions to match the expected story format
+    const stories = submissions.map((sub) => ({
+      id: sub.id,
+      title: sub.shortTitle,
+      victimName: sub.victimName,
+      category: sub.roadUserType,
+      state: sub.state,
+      date: sub.incidentDate,
+      status: sub.status,
+      age: sub.age,
+      gender: sub.gender,
+      injuryType: sub.injuryType,
+      year: new Date(sub.incidentDate).getFullYear().toString(),
+      images: sub.photoUrls ? JSON.parse(sub.photoUrls) : [],
+      description: sub.victimStory,
+      relation: sub.relation,
+      submitterName: sub.submitterName,
+    }));
+
+    // If no stories yet, return empty array
+    return { stories: stories.length > 0 ? stories : [] };
+  } catch (error) {
+    console.error("Error fetching stories:", error);
+    // Return empty stories on error
+    return { stories: [] };
+  }
 };
 
 export async function action({ request }) {
@@ -164,20 +84,116 @@ export async function action({ request }) {
       return json({ errors }, { status: 400 });
     }
 
-    // Here you would save to database/Shopify
-    // For now, just return success
-    return json(
-      {
-        success: true,
-        message: "Your submission has been received. Thank you for sharing this story.",
-      },
-      { status: 201 }
-    );
+    // Prepare submission data with proper type conversion
+    const parsedAge = age && age.trim() !== "" ? parseInt(age, 10) : null;
+
+    // Parse photo URLs from form data
+    const photoUrlsRaw = formData.get("photoUrls");
+    let photoUrlsArray = [];
+    try {
+      if (photoUrlsRaw) {
+        photoUrlsArray = JSON.parse(photoUrlsRaw);
+      }
+    } catch (error) {
+      console.error("Error parsing photo URLs:", error);
+      photoUrlsArray = [];
+    }
+
+    const submissionData = {
+      submitterName: submitterName.trim(),
+      submitterEmail: submitterEmail.trim(),
+      victimName: victimName && victimName.trim() !== "" ? victimName.trim() : null,
+      relation: relation && relation.trim() !== "" ? relation.trim() : null,
+      incidentDate: incidentDate.trim(),
+      state: state.trim(),
+      roadUserType: roadUserType.trim(),
+      injuryType: injuryType.trim(),
+      age: parsedAge && !isNaN(parsedAge) ? parsedAge : null,
+      gender: gender && gender.trim() !== "" ? gender.trim() : null,
+      shortTitle: shortTitle.trim(),
+      victimStory: victimStory.trim(),
+      photoUrls: photoUrlsArray,
+    };
+
+    // Save to database first (primary storage)
+    let dbSubmissionId = null;
+    let metaobjectId = null;
+
+    try {
+      // Save to database
+      const dbSubmission = await prisma.submission.create({
+        data: {
+          shop: "public", // Default for public submissions
+          submitterName: submissionData.submitterName,
+          submitterEmail: submissionData.submitterEmail,
+          victimName: submissionData.victimName,
+          relation: submissionData.relation,
+          incidentDate: submissionData.incidentDate,
+          state: submissionData.state,
+          roadUserType: submissionData.roadUserType,
+          injuryType: submissionData.injuryType,
+          age: submissionData.age,
+          gender: submissionData.gender,
+          shortTitle: submissionData.shortTitle,
+          victimStory: submissionData.victimStory,
+          photoUrls: JSON.stringify(submissionData.photoUrls),
+          status: "pending",
+        },
+      });
+
+      dbSubmissionId = dbSubmission.id;
+      console.log("✅ Story saved to database:", dbSubmissionId);
+
+      // Try to also save to Shopify Metaobjects (optional)
+      try {
+        const { admin } = await authenticate.admin(request);
+        const metaobject = await createStoryMetaobject(admin, submissionData);
+        metaobjectId = metaobject?.id;
+
+        // Update database record with metaobject ID
+        if (metaobjectId) {
+          await prisma.submission.update({
+            where: { id: dbSubmissionId },
+            data: { metaobjectId },
+          });
+          console.log("✅ Also saved to Shopify Metaobject:", metaobjectId);
+        }
+      } catch (authError) {
+        // It's okay if metaobject save fails - we have it in the database
+        console.log("ℹ️ Saved to database only (Shopify metaobject sync skipped)");
+      }
+
+      return json(
+        {
+          success: true,
+          message: "Your submission has been received. Thank you for sharing this story.",
+          submissionId: dbSubmissionId,
+          metaobjectId,
+        },
+        { status: 201 }
+      );
+    } catch (dbError) {
+      console.error("❌ Database error:", dbError);
+      console.error("Error details:", {
+        message: dbError.message,
+        code: dbError.code,
+        meta: dbError.meta,
+      });
+
+      return json(
+        {
+          error: `Database error: ${dbError.message}. Please check the server console for details.`,
+        },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error("Form submission error:", error);
+    console.error("Error stack:", error.stack);
+
     return json(
       {
-        error: "An error occurred while submitting. Please try again.",
+        error: `Submission error: ${error.message}`,
       },
       { status: 500 }
     );
@@ -193,24 +209,45 @@ export const meta = () => [
 ];
 
 function MemorialCard({ story }) {
+  const hasImages = story.images && story.images.length > 0;
   return (
     <Link to={`/stories/${story.id}`} className={styles.memorialCard}>
       <div className={styles.silhouetteContainer}>
-        <div className={styles.silhouette}>
-          {/* Placeholder silhouette - in production, you'd use actual silhouette images */}
-          <svg viewBox="0 0 200 200" className={styles.silhouetteSvg}>
-            <circle cx="100" cy="70" r="35" />
-            <ellipse cx="100" cy="150" rx="50" ry="60" />
-          </svg>
-        </div>
+        {hasImages ? (
+          
+          <img
+            src={story.images[0]}
+            alt={story.victimName || story.title}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
+          />
+        ) : (
+          <img
+            src="/Avatar-default.png"
+            alt="Default avatar"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
+          />
+        )}
       </div>
       <div className={styles.memorialInfo}>
-        <div className={styles.memorialName}>{story.title}</div>
         <div className={styles.memorialDetails}>
-          {story.age} • {story.gender} • {story.category}
+          Name: {story.victimName || story.title}
         </div>
-        <div className={styles.memorialLocation}>
-          {story.state} • {story.year}
+        <div className={styles.memorialDetails}>
+          Age: {story.age || 'N/A'}
+        </div>
+        <div className={styles.memorialDetails}>
+          Gender: {story.gender || 'N/A'}
+        </div>
+        <div className={styles.memorialDetails}>
+          Type: {story.category}
         </div>
       </div>
     </Link>
@@ -450,7 +487,7 @@ export default function StoriesPage() {
     roadUserType: null,
     ageRange: null,
     gender: null,
-    injuryType: "Fatal",
+    injuryType: null, // Changed from "Fatal" to null to show all stories
     state: null,
     year: null,
   });
@@ -510,7 +547,7 @@ export default function StoriesPage() {
       roadUserType: null,
       ageRange: null,
       gender: null,
-      injuryType: "Fatal",
+      injuryType: null,
       state: null,
       year: null,
     });
@@ -548,11 +585,11 @@ export default function StoriesPage() {
   return (
     <div className={styles.pageContainer}>
       <header className={styles.pageHeader}>
-        <h1 className={styles.mainTitle}>Lives Stolen</h1>
-        <p className={styles.subtitle}>Fatal Collisions</p>
+        <h2 className={styles.mainTitle}>Lives Stolen</h2>
       </header>
 
       <div className={styles.contentWrapper}>
+         <p className={styles.subtitle}>Fatal Collisions</p>
         <FilterPanel
           filters={filters}
           onFilterChange={handleFilterChange}

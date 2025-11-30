@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Form } from "@remix-run/react";
 import styles from "./StorySubmissionForm.module.css";
 
 const US_STATES = [
@@ -239,8 +240,6 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-
     // Client-side validation
     const newErrors = {};
     if (!formData.submitterName) newErrors.submitterName = "Submitter name is required";
@@ -253,13 +252,34 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
     if (!formData.victimStory) newErrors.victimStory = "Victim's story is required";
 
     if (Object.keys(newErrors).length > 0) {
+      e.preventDefault();
       setErrors(newErrors);
       return;
     }
 
-    if (onSubmit) {
-      onSubmit(formData);
+    // Add image data to a hidden input before form submission
+    // This ensures Remix Form component can handle it properly
+    const form = e.target;
+    const existingPhotoInput = form.querySelector('input[name="photoUrls"]');
+
+    if (existingPhotoInput) {
+      existingPhotoInput.remove();
     }
+
+    const photoInput = document.createElement('input');
+    photoInput.type = 'hidden';
+    photoInput.name = 'photoUrls';
+
+    if (formData.photos.length > 0) {
+      const imageUrls = formData.photos.map(img => img.preview);
+      photoInput.value = JSON.stringify(imageUrls);
+    } else {
+      photoInput.value = JSON.stringify([]);
+    }
+
+    form.appendChild(photoInput);
+
+    // Let Remix handle the form submission
   };
 
   useEffect(() => {
@@ -270,7 +290,7 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
 
   return (
     <div className={styles.formSection}>
-      <form onSubmit={handleSubmit} className={styles.form}>
+      <Form method="post" onSubmit={handleSubmit} className={styles.form}>
         {actionData?.error && (
           <div className={styles.submitError}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -435,7 +455,7 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
             )}
           </button>
         </div>
-      </form>
+      </Form>
     </div>
   );
 }
