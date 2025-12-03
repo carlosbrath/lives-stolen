@@ -1,219 +1,155 @@
 import { useState } from "react";
-import { useLoaderData, useParams, Link } from "@remix-run/react";
+import { useLoaderData, Link } from "@remix-run/react";
+import { json } from "@remix-run/node";
+import prisma from "../../db.server";
 import styles from "./styles.module.css";
 
-// Import the stories data
-const DUMMY_STORIES = [
-  {
-    id: 1,
-    title: "My First Bike Commute Experience",
-    category: "Cyclist",
-    state: "California",
-    date: "2024-11-15",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1505594905485-016e32251e01?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Started cycling to work three months ago and it completely changed my daily routine. The morning rides help me stay fit and reduce my carbon footprint. What began as a simple way to save money on gas has evolved into a passion that's transformed my daily commute into something I look forward to.\n\nThe first few weeks were challenging. My legs were sore, and the weather was unpredictable. But I persisted, and soon my body adapted. Now, three months in, I feel stronger and more energized than ever before. The fresh air, the physical exercise, and the connection with nature has had profound benefits on my mental health.\n\nI've also discovered a wonderful cycling community in my area. Weekly group rides, maintenance workshops, and casual coffee meetups have made this journey even more rewarding. If you're thinking about cycling to work, I highly recommend it. Start small, invest in a decent bike, and don't be afraid to ask experienced cyclists for advice.",
-    tags: ["Commute", "Fitness", "Environment", "Community"],
-  },
-  {
-    id: 2,
-    title: "Walking Through Downtown Changes",
-    category: "Pedestrian",
-    state: "New York",
-    date: "2024-11-12",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1517457373614-b7152f800fd1?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop",
-    ],
-    description:
-      "The new pedestrian pathways downtown have made walking safer and more enjoyable. More people are using the streets now. The city invested heavily in infrastructure improvements, including wider sidewalks, dedicated crossing zones, and better lighting. The transformation has been remarkable—not only do I feel safer walking at night, but the entire downtown area has become more vibrant and welcoming.\n\nWalking used to feel like a necessity, something I did to get from point A to B. Now it's become an experience. I notice architectural details I never saw before, stop for coffee at local cafes, and regularly bump into neighbors. The pedestrian-first approach has encouraged more people to explore downtown on foot.",
-    tags: ["Infrastructure", "Safety", "Urban Design", "Community"],
-  },
-  {
-    id: 3,
-    title: "Motorcycle Safety Tips That Saved My Life",
-    category: "Motorcyclist",
-    state: "Texas",
-    date: "2024-11-10",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Learning proper motorcycle safety techniques gave me the confidence to ride more. Always wear proper gear and stay alert. A close call on the highway made me realize how important safety practices really are. After taking a professional safety course, I learned techniques that literally changed everything.\n\nThe most critical lessons: always wear a full helmet, protective jacket, gloves, and boots. Practice emergency braking and cornering. Be visible—use reflective gear and keep your lights on. Most importantly, never ride impaired or distracted. These fundamentals have made me a better, more confident rider.",
-    tags: ["Safety", "Training", "Gear", "Prevention"],
-  },
-  {
-    id: 4,
-    title: "Urban Cycling Culture",
-    category: "Cyclist",
-    state: "Washington",
-    date: "2024-11-08",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1505594905485-016e32251e01?w=800&h=600&fit=crop",
-    ],
-    description:
-      "The cycling community in Seattle is amazing. From group rides to bike maintenance workshops, there's always something happening. Seattle has embraced cycling culture in a way that's truly inspiring. The city has invested in bike infrastructure, but more importantly, the community itself is supportive and welcoming to cyclists of all levels.\n\nWhether you're a casual commuter or a serious enthusiast, there's a place for you. I've made friends through cycling meetups, learned repair skills at community workshops, and discovered new routes on guided rides. It's not just about the bikes—it's about the people and the shared passion for sustainable, healthy transportation.",
-    tags: ["Community", "Culture", "Infrastructure", "Social"],
-  },
-  {
-    id: 5,
-    title: "Walking and Social Connection",
-    category: "Pedestrian",
-    state: "Florida",
-    date: "2024-11-05",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1517457373614-b7152f800fd1?w=800&h=600&fit=crop",
-    ],
-    description:
-      "I started walking in my neighborhood and discovered a whole community. It's amazing how walking creates connections. Before I committed to daily walks, I knew my neighbors only by sight. But walking regularly through the same streets at the same times changed that completely.\n\nI began stopping to chat, joining neighborhood walking groups, and becoming part of something larger than myself. Walking has a way of slowing you down enough to notice people and places. It builds genuine connections that are rare in our fast-paced world.",
-    tags: ["Community", "Mental Health", "Neighborhood", "Connection"],
-  },
-  {
-    id: 6,
-    title: "Road Trip on Two Wheels",
-    category: "Motorcyclist",
-    state: "Colorado",
-    date: "2024-11-01",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Took my first long motorcycle trip across the Rocky Mountains. The freedom and views were absolutely incredible. This trip was a turning point for me. I've ridden locally before, but committing to a multi-day journey across some of the most spectacular scenery in the country was transformative.\n\nThe winding mountain roads, the mountain air, the quiet moments in nature—it all made me feel truly alive. I learned a lot about myself and what I'm capable of. Every corner brought new adventures, from unexpected detours to chance meetings with other riders.",
-    tags: ["Adventure", "Travel", "Freedom", "Nature"],
-  },
-  {
-    id: 7,
-    title: "Cycling for Fitness",
-    category: "Cyclist",
-    state: "Oregon",
-    date: "2024-10-28",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1505594905485-016e32251e01?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Six months of consistent cycling and I've never felt better. It's a fun way to stay active without the gym. When I started, my goal was simple: get in better shape. But cycling quickly became so much more than a fitness tool—it became my favorite part of the day.\n\nThe physical benefits are undeniable: stronger legs, better cardio, improved posture. But the mental benefits are even more impressive. Each ride is a meditation, a chance to clear my head and process my thoughts. Plus, I enjoy riding so much that staying consistent isn't a chore—it's a pleasure.",
-    tags: ["Fitness", "Health", "Wellness", "Lifestyle"],
-  },
-  {
-    id: 8,
-    title: "Safe Pedestrian Infrastructure Works",
-    category: "Pedestrian",
-    state: "Massachusetts",
-    date: "2024-10-25",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1517457373614-b7152f800fd1?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Our city added better crossings and street lighting. The number of pedestrian incidents has dropped significantly. This initiative proves that thoughtful urban planning can save lives. The improvements included more visible crossings with better-lit signage, extended crossing times for elderly pedestrians, and street light upgrades.\n\nThe results speak for themselves. Not only are there fewer incidents, but pedestrians feel more confident and safe. More people are walking, which boosts local business and creates a more vibrant community. It's a win-win investment.",
-    tags: ["Safety", "Infrastructure", "Urban Planning", "Health"],
-  },
-  {
-    id: 9,
-    title: "Motorcycle Maintenance Basics",
-    category: "Motorcyclist",
-    state: "Illinois",
-    date: "2024-10-22",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Learning to maintain my own motorcycle saved me money and gave me a deeper understanding of my bike. Maintenance used to feel intimidating, but breaking it down into simple tasks made it manageable. I started with the basics: oil changes, filter replacements, chain maintenance, and brake checks.\n\nNot only has this saved me hundreds in shop labor, but I now know my bike inside and out. If something goes wrong on the road, I have a fighting chance of fixing it myself. Plus, there's a real satisfaction in keeping my bike running smoothly.",
-    tags: ["Maintenance", "DIY", "Mechanical", "Knowledge"],
-  },
-  {
-    id: 10,
-    title: "Winter Cycling Adventures",
-    category: "Cyclist",
-    state: "Minnesota",
-    date: "2024-10-20",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1505594905485-016e32251e01?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Cycling in winter requires special preparation and gear, but the quiet, snowy rides are magical. Most cyclists hang up their bikes when the temperature drops, but winter riding offers something special. The crisp air, the peacefulness of snowy trails, and the incredible satisfaction of tackling a challenging season—it's worth every bit of preparation.\n\nProperly dressed in layers, with good winter tires and lights, I've discovered a whole new dimension to cycling. Winter riding makes you a better cyclist overall because it demands more skill and awareness.",
-    tags: ["Winter", "Challenge", "Preparation", "Adventure"],
-  },
-  {
-    id: 11,
-    title: "Community Walking Events",
-    category: "Pedestrian",
-    state: "California",
-    date: "2024-10-18",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1517457373614-b7152f800fd1?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Our town organized monthly walking events. It brings neighbors together and builds a stronger community. What started as a simple idea has grown into something truly special. Monthly themed walks bring together dozens of residents, from young children to seniors, all united by a love of walking and community.\n\nThese events have become social touchstones—people look forward to them, friendships form, and newcomers feel welcomed. It's proven that creating opportunities for people to come together can transform a neighborhood.",
-    tags: ["Events", "Community", "Social", "Health"],
-  },
-  {
-    id: 12,
-    title: "Motorcycle Gear That Makes a Difference",
-    category: "Motorcyclist",
-    state: "Arizona",
-    date: "2024-10-15",
-    status: "Approved",
-    images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1506361197048-46a72bb872d5?w=800&h=600&fit=crop",
-    ],
-    description:
-      "Investing in quality protective gear was one of the best decisions I made as a rider. At first, I thought expensive gear was unnecessary. But after my first real accident—thankfully minor—I realized how much protection my gear provided. Had I been wearing inferior equipment, the outcome could have been very different.\n\nNow I'm passionate about gear quality. A good helmet, jacket, gloves, and boots aren't just safety equipment—they're peace of mind. They allow you to ride with confidence knowing you're protected.",
-    tags: ["Safety", "Gear", "Protection", "Investment"],
-  },
-];
-
 export const loader = async ({ params }) => {
-  const story = DUMMY_STORIES.find((s) => s.id === parseInt(params.id));
+  try {
+    const submission = await prisma.submission.findUnique({
+      where: { id: params.id },
+    });
 
-  if (!story) {
+    if (!submission) {
+      throw new Response("Story not found", { status: 404 });
+    }
+
+    const story = {
+      id: submission.id,
+      title: submission.shortTitle,
+      victimName: submission.victimName,
+      category: submission.roadUserType,
+      state: submission.state,
+      date: submission.incidentDate,
+      status: submission.status,
+      age: submission.age,
+      gender: submission.gender,
+      injuryType: submission.injuryType,
+      year: new Date(submission.incidentDate).getFullYear().toString(),
+      images: submission.photoUrls ? JSON.parse(submission.photoUrls) : [],
+      description: submission.victimStory,
+      relation: submission.relation,
+      submitterName: submission.submitterName,
+    };
+
+    return json({ story });
+  } catch (error) {
+    console.error("Error fetching story:", error);
     throw new Response("Story not found", { status: 404 });
   }
-
-  return { story };
 };
 
 export const meta = ({ data }) => [
-  { title: `${data.story.title} | Story Submission` },
+  { title: `${data.story.victimName || data.story.title} | Story Submission` },
   {
     name: "description",
     content: data.story.description.substring(0, 160) + "...",
   },
 ];
 
-function ImageGallery({ images, title }) {
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+function ShareButtons({ story }) {
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareText = `Read ${story.victimName}'s story`;
+
+  const handleShare = (platform) => {
+    const urls = {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
+      twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`,
+    };
+
+    if (urls[platform]) {
+      window.open(urls[platform], '_blank', 'width=600,height=400');
+    }
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert('Link copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   return (
-    <div className={styles.imageGallery}>
-      <div className={styles.mainImage}>
+    <div className={styles.shareButtons}>
+      <button 
+        onClick={() => handleShare('facebook')} 
+        className={styles.shareButton}
+        aria-label="Share on Facebook"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+        </svg>
+      </button>
+
+      <button 
+        onClick={() => handleShare('linkedin')} 
+        className={styles.shareButton}
+        aria-label="Share on LinkedIn"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+        </svg>
+      </button>
+
+      <button 
+        onClick={handleCopy} 
+        className={styles.shareButton}
+        aria-label="Copy link"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      </button>
+
+      <button 
+        onClick={() => handleShare('twitter')} 
+        className={styles.shareButton}
+        aria-label="Share"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+function ImageGallery({ images, victimName }) {
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  if (!images || images.length === 0) {
+    return (
+      <div className={styles.profileImage}>
+        <div className={styles.placeholderImage}>
+          <img
+            src="/Avatar-default.png"
+            alt="Default avatar"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.imageGalleryWrapper}>
+      <div className={styles.profileImage}>
         <img
           src={images[selectedImageIndex]}
-          alt={`${title} - Image ${selectedImageIndex + 1}`}
+          alt={victimName || 'Memorial photo'}
+          className={styles.mainImage}
         />
       </div>
 
@@ -240,65 +176,105 @@ function ImageGallery({ images, title }) {
 export default function StoryDetail() {
   const { story } = useLoaderData();
 
-  const categoryColor = {
-    Cyclist: "#3b82f6",
-    Pedestrian: "#10b981",
-    Motorcyclist: "#f59e0b",
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    });
   };
 
   return (
-    <div className={styles.container}>
-      <Link to="/stories" className={styles.backLink}>
-        ← Back to Stories
-      </Link>
-
-      <article className={styles.storyDetail}>
-        <header className={styles.storyHeader}>
-          <span
-            className={styles.categoryBadge}
-            style={{ backgroundColor: categoryColor[story.category] }}
-          >
-            {story.category}
-          </span>
-
-          <h1 className={styles.title}>{story.title}</h1>
-
-          <div className={styles.metadata}>
-            <span className={styles.state}>{story.state}</span>
-            <span className={styles.dot}>•</span>
-            <span className={styles.date}>
-              {new Date(story.date).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </span>
-          </div>
+    <div className={styles.pageWrapper}>
+      <div className={styles.container}>
+        {/* Header with back button and name */}
+        <header className={styles.pageHeader}>
+          <Link to="/stories" className={styles.backButton} aria-label="Back to stories">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </Link>
+          <h1 className={styles.victimName}>{story.victimName || story.title}</h1>
         </header>
 
-        <ImageGallery images={story.images} title={story.title} />
+        {/* Main content area */}
+        <div className={styles.mainContent}>
+          {/* Left side - Image */}
+          <div className={styles.imageSection}>
+            <ImageGallery images={story.images} victimName={story.victimName} />
+          </div>
 
-        <div className={styles.content}>
-          <div className={styles.description}>
+          {/* Right side - Info */}
+          <div className={styles.infoSection}>
+            {story.relation && (
+              <p className={styles.relation}>{story.relation}</p>
+            )}
+            
+            {story.state && (
+              <p className={styles.location}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                {story.state}
+              </p>
+            )}
+
+            {story.date && (
+              <p className={styles.date}>
+                Killed {formatDate(story.date)}
+              </p>
+            )}
+
+            {story.category && (
+              <p className={styles.category}>{story.category}</p>
+            )}
+
+            <ShareButtons story={story} />
+          </div>
+        </div>
+
+        {/* Story content */}
+        <article className={styles.storyContent}>
+          <h2 className={styles.storyLabel}>Story:</h2>
+          <div className={styles.storyText}>
             {story.description.split("\n").map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
+              paragraph.trim() && <p key={index}>{paragraph}</p>
             ))}
           </div>
 
-          {story.tags && story.tags.length > 0 && (
-            <div className={styles.tagsSection}>
-              <h3 className={styles.tagsTitle}>Tags</h3>
-              <div className={styles.tags}>
-                {story.tags.map((tag) => (
-                  <span key={tag} className={styles.tag}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
+          {/* Additional details */}
+          {(story.age || story.gender || story.injuryType) && (
+            <div className={styles.additionalDetails}>
+              {story.age && (
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Age:</span>
+                  <span className={styles.detailValue}>{story.age}</span>
+                </div>
+              )}
+              {story.gender && (
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Gender:</span>
+                  <span className={styles.detailValue}>{story.gender}</span>
+                </div>
+              )}
+              {story.injuryType && (
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Injury Type:</span>
+                  <span className={styles.detailValue}>{story.injuryType}</span>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      </article>
+
+          {/* Submitter info */}
+          {story.submitterName && (
+            <div className={styles.submitterInfo}>
+              <em>Submitted by: {story.submitterName}</em>
+            </div>
+          )}
+        </article>
+      </div>
     </div>
   );
 }

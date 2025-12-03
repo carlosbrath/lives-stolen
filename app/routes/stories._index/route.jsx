@@ -12,7 +12,7 @@ export const loader = async () => {
     // Fetch recently added pending stories from database
     const submissions = await prisma.submission.findMany({
       where: {
-        status: 'pending', // Show only pending stories
+        status: 'published', // Show only pending stories
       },
       orderBy: {
         createdAt: "desc", // Most recent first
