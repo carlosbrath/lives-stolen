@@ -1,6 +1,6 @@
 import { useLoaderData } from "@remix-run/react";
 import { authenticate } from "../../shopify.server";
-import { getSubmissionsForStore } from "../../services/shopify.server";
+import prisma from "../../db.server";
 import styles from "./styles.module.css";
 
 export async function loader({ request }) {
@@ -10,8 +10,32 @@ export async function loader({ request }) {
     throw new Response("Unauthorized", { status: 401 });
   }
 
-  // Get all submissions for this store
-  const submissions = await getSubmissionsForStore(session.shop);
+  // Get all submissions from database
+  const allSubmissions = await prisma.submission.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  // Transform to match expected format
+  const submissions = allSubmissions.map((sub) => ({
+    id: sub.id,
+    firstName: sub.submitterName.split(" ")[0] || "",
+    lastName: sub.submitterName.split(" ").slice(1).join(" ") || "",
+    email: sub.submitterEmail,
+    category: sub.roadUserType,
+    location: sub.state,
+    date: sub.incidentDate,
+    details: sub.victimStory,
+    podcastContact: false,
+    imageUrls: sub.photoUrls ? JSON.parse(sub.photoUrls) : [],
+    createdAt: sub.createdAt,
+    publishedAt: sub.publishedAt,
+    status: sub.status,
+    adminNotes: sub.adminNotes || "",
+    blogPostUrl: null,
+    metaobjectId: sub.metaobjectId,
+  }));
 
   // Group by status
   const pending = submissions.filter((s) => s.status === "pending");

@@ -92,31 +92,184 @@ export async function getAccessTokenForStore(shop) {
 
 /**
  * Upload images to Shopify using Files API
- * Returns URLs that can be used in blog posts
+ * Returns URLs that can be used in blog posts and metaobjects
+ *
+ * @param {string} shop - Shop domain
+ * @param {string} accessToken - Shopify access token
+ * @param {Array} files - Array of file objects with {filename, data, mimeType}
+ * @returns {Promise<Array>} Array of uploaded file URLs
  */
 export async function uploadImagesToShopify(shop, accessToken, files) {
-  // For now, we'll return placeholder URLs since file upload is complex
-  // In production, you would use Shopify's File Upload API or host images externally
-  // and return the hosted URLs
+  if (!files || files.length === 0) {
+    return [];
+  }
 
-  // Example: using external image hosting (Cloudinary, S3, etc)
-  const imageUrls = [];
+  const uploadedUrls = [];
 
   for (const file of files) {
     try {
-      // This is a placeholder - in production, upload to your image service
-      // For now, we'll use data URLs or external CDN
-      if (file.data) {
-        // If you have base64 data, convert to external URL
-        // This is simplified - you'd typically upload to Cloudinary or similar
-        imageUrls.push(`https://via.placeholder.com/800x600?text=Image`);
+      // Step 1: Generate staged upload URL
+      const stagedUploadQuery = `
+        mutation stagedUploadsCreate($input: [StagedUploadInput!]!) {
+          stagedUploadsCreate(input: $input) {
+            stagedTargets {
+              url
+              resourceUrl
+              parameters {
+                name
+                value
+              }
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+      `;
+
+      const stagedUploadVariables = {
+        input: [
+          {
+            filename: file.filename || "image.jpg",
+            mimeType: file.mimeType || "image/jpeg",
+            resource: "FILE",
+            httpMethod: "POST",
+          },
+        ],
+      };
+
+      const stagedResponse = await fetch(
+        `https://${shop}/admin/api/2025-01/graphql.json`,
+        {
+          method: "POST",
+          headers: {
+            "X-Shopify-Access-Token": accessToken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query: stagedUploadQuery,
+            variables: stagedUploadVariables,
+          }),
+        }
+      );
+
+      const stagedResult = await stagedResponse.json();
+
+      if (stagedResult.errors || stagedResult.data?.stagedUploadsCreate?.userErrors?.length > 0) {
+        console.error("Staged upload error:", stagedResult);
+        continue;
+      }
+
+      const stagedTarget = stagedResult.data.stagedUploadsCreate.stagedTargets[0];
+
+      // Step 2: Upload file to staged URL
+      const formData = new FormData();
+
+      // Add parameters from Shopify
+      stagedTarget.parameters.forEach((param) => {
+        formData.append(param.name, param.value);
+      });
+
+      // Add the actual file data
+      // If file.data is a Buffer, Blob, or File
+      if (file.data instanceof Blob || file.data instanceof File) {
+        formData.append("file", file.data, file.filename);
+      } else if (Buffer.isBuffer(file.data)) {
+        const blob = new Blob([file.data], { type: file.mimeType });
+        formData.append("file", blob, file.filename);
+      } else if (typeof file.data === "string" && file.data.startsWith("data:")) {
+        // Handle base64 data URL
+        const base64Data = file.data.split(",")[1];
+        const buffer = Buffer.from(base64Data, "base64");
+        const blob = new Blob([buffer], { type: file.mimeType });
+        formData.append("file", blob, file.filename);
+      } else {
+        console.error("Unsupported file data format");
+        continue;
+      }
+
+      const uploadResponse = await fetch(stagedTarget.url, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        console.error("File upload failed:", await uploadResponse.text());
+        continue;
+      }
+
+      // Step 3: Create file record in Shopify
+      const fileCreateQuery = `
+        mutation fileCreate($files: [FileCreateInput!]!) {
+          fileCreate(files: $files) {
+            files {
+              ... on GenericFile {
+                id
+                url
+                alt
+              }
+              ... on MediaImage {
+                id
+                image {
+                  url
+                  altText
+                }
+              }
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+      `;
+
+      const fileCreateVariables = {
+        files: [
+          {
+            alt: file.alt || file.filename || "Story image",
+            contentType: "FILE",
+            originalSource: stagedTarget.resourceUrl,
+          },
+        ],
+      };
+
+      const fileCreateResponse = await fetch(
+        `https://${shop}/admin/api/2025-01/graphql.json`,
+        {
+          method: "POST",
+          headers: {
+            "X-Shopify-Access-Token": accessToken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query: fileCreateQuery,
+            variables: fileCreateVariables,
+          }),
+        }
+      );
+
+      const fileCreateResult = await fileCreateResponse.json();
+
+      if (fileCreateResult.errors || fileCreateResult.data?.fileCreate?.userErrors?.length > 0) {
+        console.error("File create error:", fileCreateResult);
+        continue;
+      }
+
+      const createdFile = fileCreateResult.data.fileCreate.files[0];
+      const fileUrl = createdFile.url || createdFile.image?.url;
+
+      if (fileUrl) {
+        uploadedUrls.push(fileUrl);
       }
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.error("Error uploading image to Shopify:", error);
+      // Continue with next file instead of failing completely
     }
   }
 
-  return imageUrls;
+  return uploadedUrls;
 }
 
 /**

@@ -1,21 +1,20 @@
 import { useState, useMemo } from "react";
 import { useLoaderData, useActionData, useNavigation, Link } from "@remix-run/react";
 import { json } from "@remix-run/node";
-import { authenticate } from "../../shopify.server";
-import { createStoryMetaobject } from "../../services/metaobjects.server";
 import prisma from "../../db.server";
 import StorySubmissionForm from "../../components/StorySubmissionForm";
+import { rateLimitSubmission } from "../../utils/rateLimit.server";
 import styles from "./styles.module.css";
 
 export const loader = async () => {
   try {
-    // Fetch recently added pending stories from database
+    // Fetch published stories from database
     const submissions = await prisma.submission.findMany({
       where: {
-        status: 'published', // Show only pending stories
+        status: 'published',
       },
       orderBy: {
-        createdAt: "desc", // Most recent first
+        createdAt: "desc",
       },
     });
 
@@ -38,11 +37,9 @@ export const loader = async () => {
       submitterName: sub.submitterName,
     }));
 
-    // If no stories yet, return empty array
     return { stories: stories.length > 0 ? stories : [] };
   } catch (error) {
     console.error("Error fetching stories:", error);
-    // Return empty stories on error
     return { stories: [] };
   }
 };
@@ -58,6 +55,14 @@ export async function action({ request }) {
     // Extract form data
     const submitterName = formData.get("submitterName");
     const submitterEmail = formData.get("submitterEmail");
+
+    // Rate limiting: Check both IP and email
+    if (submitterEmail) {
+      const rateLimitResponse = rateLimitSubmission(request, submitterEmail);
+      if (rateLimitResponse) {
+        return rateLimitResponse;
+      }
+    }
     const victimName = formData.get("victimName");
     const relation = formData.get("relation");
     const incidentDate = formData.get("incidentDate");
@@ -99,90 +104,49 @@ export async function action({ request }) {
       photoUrlsArray = [];
     }
 
-    const submissionData = {
-      submitterName: submitterName.trim(),
-      submitterEmail: submitterEmail.trim(),
-      victimName: victimName && victimName.trim() !== "" ? victimName.trim() : null,
-      relation: relation && relation.trim() !== "" ? relation.trim() : null,
-      incidentDate: incidentDate.trim(),
-      state: state.trim(),
-      roadUserType: roadUserType.trim(),
-      injuryType: injuryType.trim(),
-      age: parsedAge && !isNaN(parsedAge) ? parsedAge : null,
-      gender: gender && gender.trim() !== "" ? gender.trim() : null,
-      shortTitle: shortTitle.trim(),
-      victimStory: victimStory.trim(),
-      photoUrls: photoUrlsArray,
-    };
-
-    // Save to database first (primary storage)
-    let dbSubmissionId = null;
-    let metaobjectId = null;
-
+    // Save to database (public submissions don't require authentication)
     try {
-      // Save to database
-      const dbSubmission = await prisma.submission.create({
+      const submission = await prisma.submission.create({
         data: {
-          shop: "public", // Default for public submissions
-          submitterName: submissionData.submitterName,
-          submitterEmail: submissionData.submitterEmail,
-          victimName: submissionData.victimName,
-          relation: submissionData.relation,
-          incidentDate: submissionData.incidentDate,
-          state: submissionData.state,
-          roadUserType: submissionData.roadUserType,
-          injuryType: submissionData.injuryType,
-          age: submissionData.age,
-          gender: submissionData.gender,
-          shortTitle: submissionData.shortTitle,
-          victimStory: submissionData.victimStory,
-          photoUrls: JSON.stringify(submissionData.photoUrls),
-          status: "pending",
+          shop: "public",
+          submitterName: submitterName.trim(),
+          submitterEmail: submitterEmail.trim(),
+          victimName: victimName && victimName.trim() !== "" ? victimName.trim() : null,
+          relation: relation && relation.trim() !== "" ? relation.trim() : null,
+          incidentDate: incidentDate.trim(),
+          state: state.trim(),
+          roadUserType: roadUserType.trim(),
+          injuryType: injuryType.trim(),
+          age: parsedAge && !isNaN(parsedAge) ? parsedAge : null,
+          gender: gender && gender.trim() !== "" ? gender.trim() : null,
+          shortTitle: shortTitle.trim(),
+          victimStory: victimStory.trim(),
+          photoUrls: JSON.stringify(photoUrlsArray),
+          status: "pending", // Pending admin review
         },
       });
 
-      dbSubmissionId = dbSubmission.id;
-      console.log("✅ Story saved to database:", dbSubmissionId);
-
-      // Try to also save to Shopify Metaobjects (optional)
-      try {
-        const { admin } = await authenticate.admin(request);
-        const metaobject = await createStoryMetaobject(admin, submissionData);
-        metaobjectId = metaobject?.id;
-
-        // Update database record with metaobject ID
-        if (metaobjectId) {
-          await prisma.submission.update({
-            where: { id: dbSubmissionId },
-            data: { metaobjectId },
-          });
-          console.log("✅ Also saved to Shopify Metaobject:", metaobjectId);
-        }
-      } catch (authError) {
-        // It's okay if metaobject save fails - we have it in the database
-        console.log("ℹ️ Saved to database only (Shopify metaobject sync skipped)");
-      }
+      console.log("✅ Story saved to database:", submission.id);
 
       return json(
         {
           success: true,
           message: "Your submission has been received. Thank you for sharing this story.",
-          submissionId: dbSubmissionId,
-          metaobjectId,
+          submissionId: submission.id,
         },
         { status: 201 }
       );
-    } catch (dbError) {
-      console.error("❌ Database error:", dbError);
+    } catch (error) {
+      console.error("❌ Database error:", error);
       console.error("Error details:", {
-        message: dbError.message,
-        code: dbError.code,
-        meta: dbError.meta,
+        message: error.message,
+        code: error.code,
+        meta: error.meta,
       });
 
       return json(
         {
-          error: `Database error: ${dbError.message}. Please check the server console for details.`,
+          error: `Submission error: ${error.message}. Please try again or contact support.`,
         },
         { status: 500 }
       );

@@ -4,15 +4,15 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 // Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
 // enough when changing adapters.
 // See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
   provider = "sqlite"
-  url      = "file:dev.sqlite"
+  url      = env("DATABASE_URL")
 }
 
+// Session model for Shopify OAuth sessions
 model Session {
   id            String    @id
   shop          String
@@ -31,9 +31,11 @@ model Session {
   emailVerified Boolean?  @default(false)
 }
 
+// Submission model for public story submissions
+// Flow: Public form → SQLite → Admin reviews → Shopify Metaobjects
 model Submission {
   id                    String    @id @default(cuid())
-  shop                  String    @default("public")  // Store domain or "public" for non-shopify
+  shop                  String    @default("public")
 
   // Submitter info
   submitterName         String
@@ -48,8 +50,8 @@ model Submission {
   // Incident info
   incidentDate          String
   state                 String
-  roadUserType          String    // "Cyclist", "Pedestrian", "Motorcyclist"
-  injuryType            String    // "Fatal", "Non-fatal"
+  roadUserType          String
+  injuryType            String
 
   // Story content
   shortTitle            String
@@ -59,12 +61,10 @@ model Submission {
   photoUrls             String?   // JSON array of photo URLs
 
   // Shopify integration
-  metaobjectId          String?   // Shopify metaobject ID
-  blogPostId            String?   // Shopify blog post ID (legacy)
-  blogPostUrl           String?   // URL to the blog post in admin (legacy)
+  metaobjectId          String?   // Shopify metaobject ID (after approval)
 
   // Status tracking
-  status                String    @default("pending")  // "pending", "approved", "published", "rejected"
+  status                String    @default("pending")
   adminNotes            String?
 
   // Timestamps

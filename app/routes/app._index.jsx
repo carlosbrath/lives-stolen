@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useFetcher } from "@remix-run/react";
+import { useEffect, useState } from "react";
+import { useFetcher, useNavigate } from "@remix-run/react";
 import {
   Page,
   Layout,
@@ -7,110 +7,53 @@ import {
   Card,
   Button,
   BlockStack,
-  Box,
-  List,
-  Link,
   InlineStack,
+  Banner,
+  List,
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
-
   return null;
 };
 
-export const action = async ({ request }) => {
-  const { admin } = await authenticate.admin(request);
-  const color = ["Red", "Orange", "Yellow", "Green"][
-    Math.floor(Math.random() * 4)
-  ];
-  const response = await admin.graphql(
-    `#graphql
-      mutation populateProduct($product: ProductCreateInput!) {
-        productCreate(product: $product) {
-          product {
-            id
-            title
-            handle
-            status
-            variants(first: 10) {
-              edges {
-                node {
-                  id
-                  price
-                  barcode
-                  createdAt
-                }
-              }
-            }
-          }
-        }
-      }`,
-    {
-      variables: {
-        product: {
-          title: `${color} Snowboard`,
-        },
-      },
-    },
-  );
-  const responseJson = await response.json();
-  const product = responseJson.data.productCreate.product;
-  const variantId = product.variants.edges[0].node.id;
-  const variantResponse = await admin.graphql(
-    `#graphql
-    mutation shopifyRemixTemplateUpdateVariant($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
-      productVariantsBulkUpdate(productId: $productId, variants: $variants) {
-        productVariants {
-          id
-          price
-          barcode
-          createdAt
-        }
-      }
-    }`,
-    {
-      variables: {
-        productId: product.id,
-        variants: [{ id: variantId, price: "100.00" }],
-      },
-    },
-  );
-  const variantResponseJson = await variantResponse.json();
-
-  return {
-    product: responseJson.data.productCreate.product,
-    variant: variantResponseJson.data.productVariantsBulkUpdate.productVariants,
-  };
-};
-
 export default function Index() {
-  const fetcher = useFetcher();
+  const setupFetcher = useFetcher();
   const shopify = useAppBridge();
-  const isLoading =
-    ["loading", "submitting"].includes(fetcher.state) &&
-    fetcher.formMethod === "POST";
-  const productId = fetcher.data?.product?.id.replace(
-    "gid://shopify/Product/",
-    "",
-  );
+  const navigate = useNavigate();
+  const [setupComplete, setSetupComplete] = useState(false);
+
+  const isSettingUp = setupFetcher.state === "submitting" || setupFetcher.state === "loading";
 
   useEffect(() => {
-    if (productId) {
-      shopify.toast.show("Product created");
+    if (setupFetcher.data?.success) {
+      shopify.toast.show(setupFetcher.data.message);
+      if (!setupFetcher.data.alreadyExists) {
+        setSetupComplete(true);
+      }
+    } else if (setupFetcher.data?.success === false) {
+      shopify.toast.show("Setup failed: " + (setupFetcher.data.error || "Unknown error"), {
+        isError: true,
+      });
     }
-  }, [productId, shopify]);
-  const generateProduct = () => fetcher.submit({}, { method: "POST" });
+  }, [setupFetcher.data, shopify]);
+
+  const runSetup = () => {
+    setupFetcher.submit({}, {
+      method: "POST",
+      action: "/app/setup-metaobject",
+    });
+  };
+
+  const goToSubmissions = () => {
+    navigate("/app/submissions");
+  };
 
   return (
     <Page>
-      <TitleBar title="Remix app template">
-        <button variant="primary" onClick={generateProduct}>
-          Generate a product
-        </button>
-      </TitleBar>
+      <TitleBar title="Story App - Dashboard" />
       <BlockStack gap="500">
         <Layout>
           <Layout.Section>
@@ -118,203 +61,128 @@ export default function Index() {
               <BlockStack gap="500">
                 <BlockStack gap="200">
                   <Text as="h2" variant="headingMd">
-                    Congrats on creating a new Shopify app 🎉
+                    Welcome to Story App
                   </Text>
                   <Text variant="bodyMd" as="p">
-                    This embedded app template uses{" "}
-                    <Link
-                      url="https://shopify.dev/docs/apps/tools/app-bridge"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      App Bridge
-                    </Link>{" "}
-                    interface examples like an{" "}
-                    <Link url="/app/additional" removeUnderline>
-                      additional page in the app nav
-                    </Link>
-                    , as well as an{" "}
-                    <Link
-                      url="https://shopify.dev/docs/api/admin-graphql"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      Admin GraphQL
-                    </Link>{" "}
-                    mutation demo, to provide a starting point for app
-                    development.
+                    This app allows your customers to submit memorial stories that can be displayed
+                    on your storefront. Stories are stored as Shopify metaobjects for seamless
+                    integration with your theme.
                   </Text>
                 </BlockStack>
-                <BlockStack gap="200">
+
+                {setupComplete && (
+                  <Banner tone="success">
+                    <p>
+                      Metaobject definition created successfully! You can now start accepting story
+                      submissions.
+                    </p>
+                  </Banner>
+                )}
+
+                <BlockStack gap="300">
                   <Text as="h3" variant="headingMd">
-                    Get started with products
+                    Quick Start
                   </Text>
-                  <Text as="p" variant="bodyMd">
-                    Generate a product with GraphQL and get the JSON output for
-                    that product. Learn more about the{" "}
-                    <Link
-                      url="https://shopify.dev/docs/api/admin-graphql/latest/mutations/productCreate"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      productCreate
-                    </Link>{" "}
-                    mutation in our API references.
-                  </Text>
+                  <List type="number">
+                    <List.Item>
+                      Run the initial setup to create the Story metaobject definition (one-time
+                      only)
+                    </List.Item>
+                    <List.Item>
+                      Share your public submission form with customers
+                    </List.Item>
+                    <List.Item>
+                      Review and approve submissions in the Submissions page
+                    </List.Item>
+                    <List.Item>
+                      Published stories appear as metaobjects in your Shopify admin
+                    </List.Item>
+                  </List>
                 </BlockStack>
+
                 <InlineStack gap="300">
-                  <Button loading={isLoading} onClick={generateProduct}>
-                    Generate a product
+                  <Button
+                    variant="primary"
+                    loading={isSettingUp}
+                    onClick={runSetup}
+                  >
+                    Run Initial Setup
                   </Button>
-                  {fetcher.data?.product && (
-                    <Button
-                      url={`shopify:admin/products/${productId}`}
-                      target="_blank"
-                      variant="plain"
-                    >
-                      View product
-                    </Button>
-                  )}
+                  <Button onClick={goToSubmissions}>
+                    View Submissions
+                  </Button>
                 </InlineStack>
-                {fetcher.data?.product && (
-                  <>
-                    <Text as="h3" variant="headingMd">
-                      {" "}
-                      productCreate mutation
-                    </Text>
-                    <Box
-                      padding="400"
-                      background="bg-surface-active"
-                      borderWidth="025"
-                      borderRadius="200"
-                      borderColor="border"
-                      overflowX="scroll"
-                    >
-                      <pre style={{ margin: 0 }}>
-                        <code>
-                          {JSON.stringify(fetcher.data.product, null, 2)}
-                        </code>
-                      </pre>
-                    </Box>
-                    <Text as="h3" variant="headingMd">
-                      {" "}
-                      productVariantsBulkUpdate mutation
-                    </Text>
-                    <Box
-                      padding="400"
-                      background="bg-surface-active"
-                      borderWidth="025"
-                      borderRadius="200"
-                      borderColor="border"
-                      overflowX="scroll"
-                    >
-                      <pre style={{ margin: 0 }}>
-                        <code>
-                          {JSON.stringify(fetcher.data.variant, null, 2)}
-                        </code>
-                      </pre>
-                    </Box>
-                  </>
+
+                {setupFetcher.data?.definition && (
+                  <Banner tone="info">
+                    <BlockStack gap="200">
+                      <Text as="p" variant="bodyMd">
+                        <strong>Metaobject Definition:</strong> {setupFetcher.data.definition.name} (
+                        {setupFetcher.data.definition.type})
+                      </Text>
+                      {setupFetcher.data.alreadyExists && (
+                        <Text as="p" variant="bodyMd">
+                          The metaobject definition already exists - no action needed!
+                        </Text>
+                      )}
+                    </BlockStack>
+                  </Banner>
                 )}
               </BlockStack>
             </Card>
           </Layout.Section>
+
           <Layout.Section variant="oneThird">
             <BlockStack gap="500">
               <Card>
                 <BlockStack gap="200">
                   <Text as="h2" variant="headingMd">
-                    App template specs
+                    Features
                   </Text>
-                  <BlockStack gap="200">
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Framework
-                      </Text>
-                      <Link
-                        url="https://remix.run"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        Remix
-                      </Link>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Database
-                      </Text>
-                      <Link
-                        url="https://www.prisma.io/"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        Prisma
-                      </Link>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Interface
-                      </Text>
-                      <span>
-                        <Link
-                          url="https://polaris.shopify.com"
-                          target="_blank"
-                          removeUnderline
-                        >
-                          Polaris
-                        </Link>
-                        {", "}
-                        <Link
-                          url="https://shopify.dev/docs/apps/tools/app-bridge"
-                          target="_blank"
-                          removeUnderline
-                        >
-                          App Bridge
-                        </Link>
-                      </span>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        API
-                      </Text>
-                      <Link
-                        url="https://shopify.dev/docs/api/admin-graphql"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        GraphQL API
-                      </Link>
-                    </InlineStack>
-                  </BlockStack>
+                  <List>
+                    <List.Item>Public story submission form</List.Item>
+                    <List.Item>Admin submission review dashboard</List.Item>
+                    <List.Item>Photo upload support</List.Item>
+                    <List.Item>Shopify metaobject integration</List.Item>
+                    <List.Item>GDPR compliant data handling</List.Item>
+                  </List>
                 </BlockStack>
               </Card>
+
               <Card>
                 <BlockStack gap="200">
                   <Text as="h2" variant="headingMd">
-                    Next steps
+                    Public URLs
+                  </Text>
+                  <BlockStack gap="200">
+                    <Text as="p" variant="bodyMd">
+                      <strong>Submission Form:</strong>
+                    </Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      /stories (public memorial wall + form)
+                    </Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      /submit-story (standalone form)
+                    </Text>
+                  </BlockStack>
+                </BlockStack>
+              </Card>
+
+              <Card>
+                <BlockStack gap="200">
+                  <Text as="h2" variant="headingMd">
+                    Resources
                   </Text>
                   <List>
                     <List.Item>
-                      Build an{" "}
-                      <Link
-                        url="https://shopify.dev/docs/apps/getting-started/build-app-example"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        {" "}
-                        example app
-                      </Link>{" "}
-                      to get started
+                      View DEPLOYMENT_GUIDE.md for production setup
                     </List.Item>
                     <List.Item>
-                      Explore Shopify’s API with{" "}
-                      <Link
-                        url="https://shopify.dev/docs/apps/tools/graphiql-admin-api"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        GraphiQL
-                      </Link>
+                      Check APP_CONFIG_INFO.md for configuration details
+                    </List.Item>
+                    <List.Item>
+                      Privacy Policy and Terms of Service are available at /privacy-policy and
+                      /terms-of-service
                     </List.Item>
                   </List>
                 </BlockStack>

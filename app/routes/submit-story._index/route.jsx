@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useActionData, useNavigation } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import StorySubmissionForm from "../../components/StorySubmissionForm";
+import { rateLimitSubmission } from "../../utils/rateLimit.server";
 import styles from "./styles.module.css";
 
 export async function action({ request }) {
@@ -15,6 +16,14 @@ export async function action({ request }) {
     // Extract form data with new field names
     const submitterName = formData.get("submitterName");
     const submitterEmail = formData.get("submitterEmail");
+
+    // Rate limiting: Check both IP and email
+    if (submitterEmail) {
+      const rateLimitResponse = rateLimitSubmission(request, submitterEmail);
+      if (rateLimitResponse) {
+        return rateLimitResponse;
+      }
+    }
     const victimName = formData.get("victimName");
     const relation = formData.get("relation");
     const incidentDate = formData.get("incidentDate");
