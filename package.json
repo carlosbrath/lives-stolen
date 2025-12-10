@@ -2,9 +2,10 @@
   "name": "story-app",
   "private": true,
   "scripts": {
-    "build": "prisma generate && prisma migrate deploy && remix vite:build",
-    "postbuild": "echo 'Build complete'",
-    "dev": "shopify app dev",
+    "setup-db": "node scripts/setup-db.js",
+    "build": "npm run setup-db && prisma generate && prisma migrate deploy && remix vite:build",
+    "dev": "npm run setup-db && shopify app dev",
+    "dev:local": "NODE_ENV=development npm run dev",
     "config:link": "shopify app config link",
     "generate": "shopify app generate",
     "deploy": "shopify app deploy",

@@ -71,7 +71,6 @@ export async function action({ request }) {
     const injuryType = formData.get("injuryType");
     const age = formData.get("age");
     const gender = formData.get("gender");
-    const shortTitle = formData.get("shortTitle");
     const victimStory = formData.get("victimStory");
 
     // Validate required fields
@@ -82,7 +81,6 @@ export async function action({ request }) {
     if (!state) errors.state = "State is required";
     if (!roadUserType) errors.roadUserType = "Road user type is required";
     if (!injuryType) errors.injuryType = "Injury type is required";
-    if (!shortTitle) errors.shortTitle = "Short title is required";
     if (!victimStory) errors.victimStory = "Victim's story is required";
 
     if (Object.keys(errors).length > 0) {
@@ -119,7 +117,7 @@ export async function action({ request }) {
           injuryType: injuryType.trim(),
           age: parsedAge && !isNaN(parsedAge) ? parsedAge : null,
           gender: gender && gender.trim() !== "" ? gender.trim() : null,
-          shortTitle: shortTitle.trim(),
+          shortTitle: victimName && victimName.trim() !== "" ? victimName.trim() : `Story from ${state}`,
           victimStory: victimStory.trim(),
           photoUrls: JSON.stringify(photoUrlsArray),
           status: "pending", // Pending admin review

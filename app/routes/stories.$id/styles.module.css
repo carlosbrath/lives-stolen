@@ -1,4 +1,10 @@
 /* ===================================
+   FONT IMPORTS
+   =================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Add Clab font import here if you have the URL */
+
+/* ===================================
    GLOBAL STYLES
    =================================== */
 * {
@@ -11,9 +17,7 @@
 .pageWrapper {
   min-height: 100vh;
   background-color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -57,6 +61,7 @@
   margin: 0;
   font-size: 2rem;
   font-weight: 700;
+  font-family: 'Clab', sans-serif;
   color: #111827;
   letter-spacing: -0.02em;
 }
@@ -95,6 +100,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .profileImage .mainImage {
@@ -102,6 +108,7 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: opacity 0.3s ease;
 }
 
 .placeholderImage {
@@ -149,6 +156,59 @@
   box-shadow: 0 0 0 1px #3b82f6;
 }
 
+/* Navigation Buttons */
+.navButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #1f2937;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.navButton:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.navButton:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.navButtonPrev {
+  left: 16px;
+}
+
+.navButtonNext {
+  right: 16px;
+}
+
+/* Image Counter */
+.imageCounter {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+
 /* ===================================
    INFO SECTION
    =================================== */
@@ -163,6 +223,7 @@
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
+  font-family: 'Clab', sans-serif;
   color: #111827;
   line-height: 1.5;
 }
@@ -185,6 +246,7 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
+  font-family: 'Clab', sans-serif;
   color: #111827;
   line-height: 1.5;
 }
@@ -242,6 +304,7 @@
   margin: 0 0 16px 0;
   font-size: 1.125rem;
   font-weight: 700;
+  font-family: 'Clab', sans-serif;
   color: #111827;
 }
 
@@ -261,50 +324,37 @@
 }
 
 /* ===================================
-   ADDITIONAL DETAILS
+   LIVES STOLEN BUTTON
    =================================== */
-.additionalDetails {
+.livesButtonWrapper {
   display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  padding: 24px;
-  background-color: #f9fafb;
-  border-radius: 8px;
-  margin-bottom: 24px;
+  justify-content: flex-start;
+  margin-top: 32px;
 }
 
-.detailItem {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.detailLabel {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.detailValue {
+.livesButton {
+  display: inline-block;
+  background-color: #dc2626;
+  color: white;
   font-size: 1rem;
-  color: #111827;
-  font-weight: 500;
+  font-weight: 600;
+  font-family: 'Clab', sans-serif;
+  padding: 14px 40px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
 }
 
-/* ===================================
-   SUBMITTER INFO
-   =================================== */
-.submitterInfo {
-  padding-top: 24px;
-  border-top: 1px solid #e5e7eb;
-  font-size: 0.9rem;
-  color: #6b7280;
+.livesButton:hover {
+  background-color: #b91c1c;
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+  transform: translateY(-1px);
 }
 
-.submitterInfo em {
-  font-style: italic;
+.livesButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
 }
 
 /* ===================================
@@ -370,9 +420,29 @@
     grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
   }
 
-  .additionalDetails {
-    flex-direction: column;
-    gap: 16px;
+  .navButton {
+    width: 44px;
+    height: 44px;
+  }
+
+  .navButton svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .navButtonPrev {
+    left: 12px;
+  }
+
+  .navButtonNext {
+    right: 12px;
+  }
+
+  .imageCounter {
+    bottom: 12px;
+    right: 12px;
+    font-size: 0.8rem;
+    padding: 5px 10px;
   }
 }
 
@@ -451,26 +521,43 @@
     margin-bottom: 12px;
   }
 
-  .additionalDetails {
-    padding: 16px;
+  .livesButtonWrapper {
+    margin-top: 24px;
   }
 
-  .detailLabel {
-    font-size: 0.8rem;
-  }
-
-  .detailValue {
-    font-size: 0.9rem;
-  }
-
-  .submitterInfo {
-    padding-top: 16px;
-    font-size: 0.85rem;
+  .livesButton {
+    font-size: 0.95rem;
+    padding: 12px 32px;
   }
 
   .thumbnails {
     grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
     gap: 10px;
+  }
+
+  .navButton {
+    width: 40px;
+    height: 40px;
+  }
+
+  .navButton svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .navButtonPrev {
+    left: 8px;
+  }
+
+  .navButtonNext {
+    right: 8px;
+  }
+
+  .imageCounter {
+    bottom: 8px;
+    right: 8px;
+    font-size: 0.75rem;
+    padding: 4px 8px;
   }
 }
 
@@ -479,7 +566,10 @@
    =================================== */
 @media print {
   .backButton,
-  .shareButtons {
+  .shareButtons,
+  .navButton,
+  .imageCounter,
+  .thumbnails {
     display: none;
   }
 

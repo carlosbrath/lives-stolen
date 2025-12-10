@@ -241,7 +241,7 @@
 
 .memorialsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(6, 1fr);
   gap: 30px;
   margin-bottom: 40px;
 }
@@ -513,7 +513,7 @@
   }
 
   .memorialsGrid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(6, 1fr);
     gap: 24px;
   }
 
@@ -583,7 +583,7 @@
   }
 
   .memorialsGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
   }
 
@@ -626,7 +626,8 @@
 
 @media (max-width: 480px) {
   .memorialsGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
   }
 
   .formSectionWrapper {

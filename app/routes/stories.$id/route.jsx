@@ -143,14 +143,65 @@ function ImageGallery({ images, victimName }) {
     );
   }
 
+  const handlePrevious = () => {
+    setSelectedImageIndex((prev) =>
+      prev === 0 ? images.length - 1 : prev - 1
+    );
+  };
+
+  const handleNext = () => {
+    setSelectedImageIndex((prev) =>
+      prev === images.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  // Keyboard navigation
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowLeft') {
+      handlePrevious();
+    } else if (e.key === 'ArrowRight') {
+      handleNext();
+    }
+  };
+
   return (
-    <div className={styles.imageGalleryWrapper}>
+    <div className={styles.imageGalleryWrapper} onKeyDown={handleKeyDown} tabIndex={0}>
       <div className={styles.profileImage}>
         <img
           src={images[selectedImageIndex]}
           alt={victimName || 'Memorial photo'}
           className={styles.mainImage}
         />
+
+        {/* Navigation arrows - only show if multiple images */}
+        {images.length > 1 && (
+          <>
+            <button
+              className={`${styles.navButton} ${styles.navButtonPrev}`}
+              onClick={handlePrevious}
+              aria-label="Previous image"
+            >
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+
+            <button
+              className={`${styles.navButton} ${styles.navButtonNext}`}
+              onClick={handleNext}
+              aria-label="Next image"
+            >
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+
+            {/* Image counter */}
+            <div className={styles.imageCounter}>
+              {selectedImageIndex + 1} / {images.length}
+            </div>
+          </>
+        )}
       </div>
 
       {images.length > 1 && (
@@ -243,36 +294,12 @@ export default function StoryDetail() {
             ))}
           </div>
 
-          {/* Additional details */}
-          {(story.age || story.gender || story.injuryType) && (
-            <div className={styles.additionalDetails}>
-              {story.age && (
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Age:</span>
-                  <span className={styles.detailValue}>{story.age}</span>
-                </div>
-              )}
-              {story.gender && (
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Gender:</span>
-                  <span className={styles.detailValue}>{story.gender}</span>
-                </div>
-              )}
-              {story.injuryType && (
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Injury Type:</span>
-                  <span className={styles.detailValue}>{story.injuryType}</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Submitter info */}
-          {story.submitterName && (
-            <div className={styles.submitterInfo}>
-              <em>Submitted by: {story.submitterName}</em>
-            </div>
-          )}
+          {/* Lives Stolen Button */}
+          <div className={styles.livesButtonWrapper}>
+            <Link to="/stories" className={styles.livesButton}>
+              Lives Stolen
+            </Link>
+          </div>
         </article>
       </div>
     </div>

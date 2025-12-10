@@ -211,7 +211,6 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
     injuryType: "",
     age: "",
     gender: "",
-    shortTitle: "",
     victimStory: "",
     photos: [],
   });
@@ -248,7 +247,6 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
     if (!formData.state) newErrors.state = "State is required";
     if (!formData.roadUserType) newErrors.roadUserType = "Road user type is required";
     if (!formData.injuryType) newErrors.injuryType = "Injury type is required";
-    if (!formData.shortTitle) newErrors.shortTitle = "Short title is required";
     if (!formData.victimStory) newErrors.victimStory = "Victim's story is required";
 
     if (Object.keys(newErrors).length > 0) {
@@ -409,16 +407,6 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
           />
 
           {/* Story Details */}
-          <FormInput
-            label="Short Title"
-            name="shortTitle"
-            placeholder="Brief title for this story"
-            required
-            value={formData.shortTitle}
-            onChange={handleInputChange}
-            error={errors.shortTitle}
-          />
-
           <FormTextarea
             label="Victim's Story"
             name="victimStory"
