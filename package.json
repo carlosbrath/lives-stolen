@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "build": "remix vite:build",
-    "postbuild": "prisma generate",
+    "build:with-db": "prisma generate && prisma migrate deploy && remix vite:build",
+    "postbuild": "echo 'Build complete'",
     "dev": "shopify app dev",
     "config:link": "shopify app config link",
     "generate": "shopify app generate",

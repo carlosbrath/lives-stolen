@@ -26,6 +26,7 @@
   color: #000000;
   text-transform: uppercase;
   letter-spacing: 2px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .subtitle {
@@ -34,6 +35,7 @@
   color: #666666;
   font-weight: 400;
   letter-spacing: 1px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* Content Wrapper */
@@ -250,7 +252,6 @@
   color: inherit;
   display: block;
   background: #ffffff;
-  border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
@@ -333,17 +334,20 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   width: 100%;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .memorialDetails {
   font-size: 0.9rem;
   color: #070707;
-  margin-bottom: 6px;
+  margin-bottom: 25px;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .memorialLocation {
   font-size: 0.9rem;
   color: #cccccc;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 /* Empty State */

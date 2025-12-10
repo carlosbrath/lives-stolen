@@ -207,11 +207,12 @@ function MemorialCard({ story }) {
         <div className={styles.memorialDetails}>
           Age: {story.age || 'N/A'}
         </div>
-        <div className={styles.memorialDetails}>
-          Gender: {story.gender || 'N/A'}
-        </div>
+        
         <div className={styles.memorialDetails}>
           Type: {story.category}
+        </div>
+        <div className={styles.memorialDetails}>
+          Location: {story.state}
         </div>
       </div>
     </Link>
