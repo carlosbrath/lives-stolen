@@ -2,8 +2,7 @@
   "name": "story-app",
   "private": true,
   "scripts": {
-    "build": "remix vite:build",
-    "build:with-db": "prisma generate && prisma migrate deploy && remix vite:build",
+    "build": "prisma generate && prisma migrate deploy && remix vite:build",
     "postbuild": "echo 'Build complete'",
     "dev": "shopify app dev",
     "config:link": "shopify app config link",
