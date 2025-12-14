@@ -18,6 +18,6 @@ COPY . .
 
 # Build without migrations (DATABASE_URL not available during build)
 # Migrations will run at startup via docker-start script
-RUN DATABASE_URL="postgresql://placeholder" npm run build:docker
+RUN DATABASE_URL="postgresql://placeholder" SHOPIFY_APP_URL="https://stories-app.fly.dev" npm run build:docker
 
 CMD ["npm", "run", "docker-start"]
