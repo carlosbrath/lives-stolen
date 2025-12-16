@@ -1,9 +1,9 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "678d979ac2daaeaf496c83e594dbb230"
-name = "story-app"
+name = "stories-app"
 # IMPORTANT: Update this URL to your production domain before deploying
-application_url = "https://example.com"
+application_url = "https://stories-app.fly.dev/"
 embedded = true
 
 [build]
@@ -40,4 +40,10 @@ scopes = "write_products,read_metaobjects,write_metaobjects,write_files,read_fil
 
 [auth]
 # IMPORTANT: Update this URL to your production domain before deploying
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "https://stories-app.fly.dev/api/auth" ]
+
+[app_proxy]
+# Makes your app accessible at: yourstore.com/apps/stories-app/*
+url = "https://stories-app.fly.dev"
+subpath = "stories-app"
+prefix = "apps"

@@ -1,0 +1,15 @@
+# Memorial Stories Theme App Extension
+# This extension adds customizable blocks for displaying and submitting memorial stories
+
+name = "memorial-stories"
+
+uid = "9fd2d9ee-3382-987d-f10a-be9b61896b92b16f3968"
+
+type = "theme"
+api_version = "2024-01"
+
+[extension_points.theme]
+
+[[extension_points.theme.settings]]
+name = "Global Settings"
+settings = []

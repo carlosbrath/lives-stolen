@@ -6,8 +6,12 @@ import StorySubmissionForm from "../../components/StorySubmissionForm";
 import { rateLimitSubmission } from "../../utils/rateLimit.server";
 import styles from "./styles.module.css";
 
-export const loader = async () => {
+export const loader = async ({ request }) => {
   try {
+    // Check if this is an embed request
+    const url = new URL(request.url);
+    const embedMode = url.searchParams.get('embed');
+
     // Fetch published stories from database
     const submissions = await prisma.submission.findMany({
       where: {
@@ -37,10 +41,10 @@ export const loader = async () => {
       submitterName: sub.submitterName,
     }));
 
-    return { stories: stories.length > 0 ? stories : [] };
+    return { stories: stories.length > 0 ? stories : [], embedMode };
   } catch (error) {
     console.error("Error fetching stories:", error);
-    return { stories: [] };
+    return { stories: [], embedMode: null };
   }
 };
 
@@ -224,17 +228,17 @@ function FilterPanel({ filters, onFilterChange, onClearFilters }) {
   const roadUserTypes = ["Cyclist", "Pedestrian", "Motorcyclist"];
   const ageRanges = ["0-17", "18-30", "31-45", "46-60", "60+"];
   const genders = ["Male", "Female", "Other"];
-  const injuryTypes = ["Fatal"];
+  const injuryTypes = ["Fatal", "Non-fatal"];
   const states = ["California", "New York", "Texas", "Washington", "Florida", "Colorado"];
-  const years = ["2024", "2023", "2022", "2021"];
+  const years = ["2025","2024", "2023", "2022", "2021", "2020"];
 
   const hasActiveFilters =
-    filters.roadUserType ||
-    filters.ageRange ||
-    filters.gender ||
+    filters.roadUserType.length > 0 ||
+    filters.ageRange.length > 0 ||
+    filters.gender.length > 0 ||
     filters.injuryType ||
-    filters.state ||
-    filters.year;
+    filters.state.length > 0 ||
+    filters.year.length > 0;
 
   const toggleGroup = (groupName) => {
     setExpandedGroups((prev) => ({
@@ -281,9 +285,9 @@ function FilterPanel({ filters, onFilterChange, onClearFilters }) {
                   <label key={type} className={styles.filterOption}>
                     <input
                       type="checkbox"
-                      checked={filters.roadUserType === type}
+                      checked={filters.roadUserType.includes(type)}
                       onChange={(e) =>
-                        onFilterChange("roadUserType", e.target.checked ? type : null)
+                        onFilterChange("roadUserType", type, e.target.checked)
                       }
                     />
                     <span>{type}</span>
@@ -307,9 +311,9 @@ function FilterPanel({ filters, onFilterChange, onClearFilters }) {
                   <label key={range} className={styles.filterOption}>
                     <input
                       type="checkbox"
-                      checked={filters.ageRange === range}
+                      checked={filters.ageRange.includes(range)}
                       onChange={(e) =>
-                        onFilterChange("ageRange", e.target.checked ? range : null)
+                        onFilterChange("ageRange", range, e.target.checked)
                       }
                     />
                     <span>{range}</span>
@@ -333,9 +337,9 @@ function FilterPanel({ filters, onFilterChange, onClearFilters }) {
                   <label key={gender} className={styles.filterOption}>
                     <input
                       type="checkbox"
-                      checked={filters.gender === gender}
+                      checked={filters.gender.includes(gender)}
                       onChange={(e) =>
-                        onFilterChange("gender", e.target.checked ? gender : null)
+                        onFilterChange("gender", gender, e.target.checked)
                       }
                     />
                     <span>{gender}</span>
@@ -361,7 +365,7 @@ function FilterPanel({ filters, onFilterChange, onClearFilters }) {
                       type="checkbox"
                       checked={filters.injuryType === type}
                       onChange={(e) =>
-                        onFilterChange("injuryType", e.target.checked ? type : null)
+                        onFilterChange("injuryType", e.target.checked ? type : null, e.target.checked)
                       }
                     />
                     <span>{type}</span>
@@ -385,9 +389,9 @@ function FilterPanel({ filters, onFilterChange, onClearFilters }) {
                   <label key={state} className={styles.filterOption}>
                     <input
                       type="checkbox"
-                      checked={filters.state === state}
+                      checked={filters.state.includes(state)}
                       onChange={(e) =>
-                        onFilterChange("state", e.target.checked ? state : null)
+                        onFilterChange("state", state, e.target.checked)
                       }
                     />
                     <span>{state}</span>
@@ -411,9 +415,9 @@ function FilterPanel({ filters, onFilterChange, onClearFilters }) {
                   <label key={year} className={styles.filterOption}>
                     <input
                       type="checkbox"
-                      checked={filters.year === year}
+                      checked={filters.year.includes(year)}
                       onChange={(e) =>
-                        onFilterChange("year", e.target.checked ? year : null)
+                        onFilterChange("year", year, e.target.checked)
                       }
                     />
                     <span>{year}</span>
@@ -441,52 +445,70 @@ function FilterPanel({ filters, onFilterChange, onClearFilters }) {
 }
 
 export default function StoriesPage() {
-  const { stories } = useLoaderData();
+  const { stories, embedMode } = useLoaderData();
   const actionData = useActionData();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
   const [filters, setFilters] = useState({
-    roadUserType: null,
-    ageRange: null,
-    gender: null,
-    injuryType: null, // Changed from "Fatal" to null to show all stories
-    state: null,
-    year: null,
+    roadUserType: [], // Array for multiple selections
+    ageRange: [], // Array for multiple selections
+    gender: [], // Array for multiple selections
+    injuryType: "Fatal", // Default to showing Fatal stories (Lives Stolen) - keep as single value
+    state: [], // Array for multiple selections
+    year: [], // Array for multiple selections
   });
   const [displayCount, setDisplayCount] = useState(12);
 
   const ITEMS_PER_PAGE = 12;
 
+  // Calculate counts for Lives Stolen and Lives Shattered
+  const livesStolen = useMemo(() => {
+    return stories.filter(story => story.injuryType === "Fatal").length;
+  }, [stories]);
+
+  const livesShattered = useMemo(() => {
+    return stories.filter(story => story.injuryType === "Non-fatal").length;
+  }, [stories]);
+
   // Filter logic
   const filteredStories = useMemo(() => {
     return stories.filter((story) => {
-      if (filters.roadUserType && story.category !== filters.roadUserType) {
+      // Road User Type - check if story's category is in the selected array
+      if (filters.roadUserType.length > 0 && !filters.roadUserType.includes(story.category)) {
         return false;
       }
 
-      if (filters.ageRange) {
-        const [min, max] = filters.ageRange.includes("+")
-          ? [parseInt(filters.ageRange), Infinity]
-          : filters.ageRange.split("-").map(Number);
-        if (story.age < min || story.age > max) {
+      // Age Range - check if story's age falls within any selected range
+      if (filters.ageRange.length > 0) {
+        const ageMatches = filters.ageRange.some((range) => {
+          const [min, max] = range.includes("+")
+            ? [parseInt(range), Infinity]
+            : range.split("-").map(Number);
+          return story.age >= min && story.age <= max;
+        });
+        if (!ageMatches) {
           return false;
         }
       }
 
-      if (filters.gender && story.gender !== filters.gender) {
+      // Gender - check if story's gender is in the selected array
+      if (filters.gender.length > 0 && !filters.gender.includes(story.gender)) {
         return false;
       }
 
+      // Injury Type - keep as single value for the main filter buttons
       if (filters.injuryType && story.injuryType !== filters.injuryType) {
         return false;
       }
 
-      if (filters.state && story.state !== filters.state) {
+      // State - check if story's state is in the selected array
+      if (filters.state.length > 0 && !filters.state.includes(story.state)) {
         return false;
       }
 
-      if (filters.year && story.year !== filters.year) {
+      // Year - check if story's year is in the selected array
+      if (filters.year.length > 0 && !filters.year.includes(story.year)) {
         return false;
       }
 
@@ -497,22 +519,44 @@ export default function StoriesPage() {
   const displayedStories = filteredStories.slice(0, displayCount);
   const hasMoreStories = displayCount < filteredStories.length;
 
-  const handleFilterChange = (filterName, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [filterName]: value,
-    }));
+  const handleFilterChange = (filterName, value, isChecked) => {
+    // Handle injuryType separately as it's a single value, not an array
+    if (filterName === "injuryType") {
+      setFilters((prev) => ({
+        ...prev,
+        [filterName]: value,
+      }));
+    } else {
+      // For array-based filters
+      setFilters((prev) => {
+        const currentValues = prev[filterName];
+        let newValues;
+
+        if (isChecked) {
+          // Add value to array if not already present
+          newValues = currentValues.includes(value) ? currentValues : [...currentValues, value];
+        } else {
+          // Remove value from array
+          newValues = currentValues.filter((v) => v !== value);
+        }
+
+        return {
+          ...prev,
+          [filterName]: newValues,
+        };
+      });
+    }
     setDisplayCount(ITEMS_PER_PAGE);
   };
 
   const handleClearFilters = () => {
     setFilters({
-      roadUserType: null,
-      ageRange: null,
-      gender: null,
+      roadUserType: [],
+      ageRange: [],
+      gender: [],
       injuryType: null,
-      state: null,
-      year: null,
+      state: [],
+      year: [],
     });
     setDisplayCount(ITEMS_PER_PAGE);
   };
@@ -545,20 +589,153 @@ export default function StoriesPage() {
     );
   }
 
+  // Embed mode: Show only the form
+  if (embedMode === 'form') {
+    return (
+      <div className={styles.pageContainer} style={{ background: '#000000', minHeight: 'auto', padding: '40px 20px' }}>
+        <StorySubmissionForm
+          isSubmitting={isSubmitting}
+          actionData={actionData}
+        />
+      </div>
+    );
+  }
+
+  // Embed mode: Show only the memorial wall (without form)
+  if (embedMode === 'wall') {
+    return (
+      <div className={styles.pageContainer} style={{ minHeight: 'auto' }}>
+        {/* Memorial Wall Header */}
+        <header className={styles.memorialWallHeader}>
+          <h1 className={styles.memorialWallTitle}>Memorial Wall</h1>
+          <p className={styles.memorialWallDescription}>
+            Road violence doesn't just take lives, it shatters the lives of survivors and families. Together, these walls show the full impact.
+          </p>
+
+          {/* Stats and Filter Buttons */}
+          <div className={styles.statsContainer}>
+            <div className={styles.statBox}>
+              <h3 className={styles.statLabel}>Lives Stolen: {livesStolen}</h3>
+              <button
+                className={`${styles.headingButtons} ${filters.injuryType === "Fatal" ? styles.headingButtonsActive : ''}`}
+                onClick={() => {
+                  setFilters(prev => ({ ...prev, injuryType: "Fatal" }));
+                  setDisplayCount(ITEMS_PER_PAGE);
+                }}
+              >
+                See Lives Stolen
+              </button>
+            </div>
+
+            <div className={styles.statBox}>
+              <h3 className={styles.statLabel}>Lives Shattered: {livesShattered}</h3>
+              <button
+                className={`${styles.headingButtons} ${filters.injuryType === "Non-fatal" ? styles.headingButtonsActive : ''}`}
+                onClick={() => {
+                  setFilters(prev => ({ ...prev, injuryType: "Non-fatal" }));
+                  setDisplayCount(ITEMS_PER_PAGE);
+                }}
+              >
+                See Lives Shattered
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Section Title and Additional Filters */}
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>
+            {filters.injuryType === "Fatal" ? "Lives Stolen" : "Lives Shattered"}
+          </h2>
+          <FilterPanel
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+          />
+        </div>
+
+        <div className={styles.contentWrapper}>
+          <div className={styles.memorialsSection}>
+            {filteredStories.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p>No memorials found matching your filters.</p>
+              </div>
+            ) : (
+              <>
+                <div className={styles.memorialsGrid}>
+                  {displayedStories.map((story) => (
+                    <MemorialCard key={story.id} story={story} />
+                  ))}
+                </div>
+
+                {hasMoreStories && (
+                  <div className={styles.loadMoreContainer}>
+                    <button className={styles.loadMoreButton} onClick={handleLoadMore}>
+                      Load More
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Full page mode: Show everything
   return (
     <div className={styles.pageContainer}>
-      <header className={styles.pageHeader}>
-        <h2 className={styles.mainTitle}>Lives Stolen</h2>
+      {/* Memorial Wall Header */}
+      <header className={styles.memorialWallHeader}>
+        <h1 className={styles.memorialWallTitle}>Memorial Wall</h1>
+        <p className={styles.memorialWallDescription}>
+          Road violence doesn't just take lives, it shatters the lives of survivors and families. Together, these walls show the full impact.
+        </p>
+
+        {/* Stats and Filter Buttons */}
+        <div className={styles.statsContainer}>
+          <div className={styles.statBox}>
+            <h3 className={styles.statLabel}>Lives Stolen: {livesStolen}</h3>
+            <button
+              className={`${styles.headingButtons} ${filters.injuryType === "Fatal" ? styles.headingButtonsActive : ''}`}
+              onClick={() => {
+                setFilters(prev => ({ ...prev, injuryType: "Fatal" }));
+                setDisplayCount(ITEMS_PER_PAGE);
+              }}
+            >
+              See Lives Stolen
+            </button>
+          </div>
+
+          <div className={styles.statBox}>
+            <h3 className={styles.statLabel}>Lives Shattered: {livesShattered}</h3>
+            <button
+              className={`${styles.headingButtons} ${filters.injuryType === "Non-fatal" ? styles.headingButtonsActive : ''}`}
+              onClick={() => {
+                setFilters(prev => ({ ...prev, injuryType: "Non-fatal" }));
+                setDisplayCount(ITEMS_PER_PAGE);
+              }}
+            >
+              See Lives Shattered
+            </button>
+          </div>
+        </div>
       </header>
 
-      <div className={styles.contentWrapper}>
-         <p className={styles.subtitle}>Fatal Collisions</p>
+      {/* Section Title and Additional Filters */}
+      <div className={styles.sectionHeader}>
+        <h2 className={styles.sectionTitle}>
+          {filters.injuryType === "Fatal" ? "Lives Stolen" : "Lives Shattered"}
+        </h2>
         <FilterPanel
           filters={filters}
           onFilterChange={handleFilterChange}
           onClearFilters={handleClearFilters}
         />
+      </div>
 
+      <div className={styles.contentWrapper}>
         <div className={styles.memorialsSection}>
           {filteredStories.length === 0 ? (
             <div className={styles.emptyState}>

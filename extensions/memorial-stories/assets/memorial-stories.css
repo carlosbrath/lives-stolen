@@ -1,0 +1,77 @@
+/* Memorial Stories - Global Styles */
+
+/* Reset and base styles */
+.memorial-stories-wall *,
+.memorial-submission-section *,
+.memorial-banner * {
+  box-sizing: border-box;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Utility classes */
+.memorial-text-center {
+  text-align: center;
+}
+
+.memorial-mb-1 {
+  margin-bottom: 1rem;
+}
+
+.memorial-mb-2 {
+  margin-bottom: 2rem;
+}
+
+.memorial-mb-3 {
+  margin-bottom: 3rem;
+}
+
+/* Loading animation */
+.memorial-loading {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #000;
+  animation: memorial-spin 1s linear infinite;
+}
+
+@keyframes memorial-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive iframe container */
+.memorial-iframe-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.memorial-iframe-container iframe {
+  width: 100%;
+  border: none;
+  display: block;
+}
+
+/* Accessibility improvements */
+.memorial-stories-button:focus,
+.memorial-submission-link:focus,
+.memorial-banner-button:focus {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .memorial-stories-button,
+  .memorial-submission-link,
+  .memorial-banner-button {
+    display: none;
+  }
+}

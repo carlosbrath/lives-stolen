@@ -21,7 +21,7 @@ export default function App() {
       {/* Hero Section */}
       <section className={styles.heroSection}>
         <div className={styles.heroContent}>
-          <h1 className={styles.heroTitle}>Lives Stolen</h1>
+          <h1 className={styles.heroTitle}>Live Stolen</h1>
           <p className={styles.heroSubtitle}>
             Remembering those who lost their lives to traffic violence
           </p>

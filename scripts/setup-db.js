@@ -2,8 +2,7 @@
 
 /**
  * This script updates the Prisma schema based on the environment
- * - Development: Uses SQLite
- * - Production: Uses PostgreSQL
+ * - Now uses PostgreSQL for both development and production
  */
 
 import { readFileSync, writeFileSync } from 'fs';
@@ -24,21 +23,12 @@ console.log(`🔧 Setting up database for ${isProduction ? 'PRODUCTION' : 'DEVEL
 try {
   let schema = readFileSync(schemaPath, 'utf-8');
 
-  if (isProduction) {
-    // Switch to PostgreSQL for production
-    schema = schema.replace(
-      /provider\s*=\s*"sqlite"/g,
-      'provider = "postgresql"'
-    );
-    console.log('✅ Database provider set to PostgreSQL');
-  } else {
-    // Switch to SQLite for development
-    schema = schema.replace(
-      /provider\s*=\s*"postgresql"/g,
-      'provider = "sqlite"'
-    );
-    console.log('✅ Database provider set to SQLite');
-  }
+  // Always use PostgreSQL (for both development and production)
+  schema = schema.replace(
+    /provider\s*=\s*"sqlite"/g,
+    'provider = "postgresql"'
+  );
+  console.log('✅ Database provider set to PostgreSQL');
 
   writeFileSync(schemaPath, schema, 'utf-8');
   console.log('✅ Schema updated successfully');

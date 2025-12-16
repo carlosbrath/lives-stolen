@@ -1,0 +1,20 @@
+{
+  "memorial_stories": {
+    "story_wall": {
+      "heading": "Memorial Stories",
+      "view_all": "View All Stories",
+      "loading": "Loading stories..."
+    },
+    "submission_form": {
+      "heading": "Share Your Story",
+      "description": "Help us honor those we've lost by sharing their story with our community.",
+      "open_full": "Open form in new tab"
+    },
+    "banner": {
+      "heading": "Honor Their Memory",
+      "description": "Every story matters. Share a memory and help us remember those who have touched our lives.",
+      "share_button": "Share a Story",
+      "view_button": "View All Stories"
+    }
+  }
+}

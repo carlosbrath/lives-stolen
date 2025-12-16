@@ -238,14 +238,21 @@ export default function StoryDetail() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.container}>
+        {/* Top Title - Lives Stolen or Lives Shattered */}
+        <div className={styles.topTitle}>
+          <h1 className={styles.injuryTypeTitle}>
+            {story.injuryType === "Fatal" ? "Lives Stolen" : "Lives Shattered"}
+          </h1>
+        </div>
+
         {/* Header with back button and name */}
         <header className={styles.pageHeader}>
           <Link to="/stories" className={styles.backButton} aria-label="Back to stories">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
           </Link>
-          <h1 className={styles.victimName}>{story.victimName || story.title}</h1>
+          <h2 className={styles.victimName}>{story.victimName || story.title}</h2>
         </header>
 
         {/* Main content area */}
@@ -294,10 +301,10 @@ export default function StoryDetail() {
             ))}
           </div>
 
-          {/* Lives Stolen Button */}
+          {/* Lives Stolen/Shattered Button */}
           <div className={styles.livesButtonWrapper}>
             <Link to="/stories" className={styles.livesButton}>
-              Lives Stolen
+              {story.injuryType === "Fatal" ? "Lives Stolen" : "Lives Shattered"}
             </Link>
           </div>
         </article>

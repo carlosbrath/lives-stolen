@@ -1,0 +1,186 @@
+{% comment %}
+  Memorial Stories Wall Block
+  Displays a grid of published memorial stories
+{% endcomment %}
+
+{% schema %}
+{
+  "name": "Memorial Stories Wall",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Memorial Stories"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Description",
+      "default": "Read and share stories from our community"
+    },
+    {
+      "type": "range",
+      "id": "stories_per_row",
+      "label": "Stories per row",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "range",
+      "id": "max_stories",
+      "label": "Maximum stories to show",
+      "min": 3,
+      "max": 12,
+      "step": 1,
+      "default": 6
+    },
+    {
+      "type": "checkbox",
+      "id": "show_view_all_button",
+      "label": "Show 'View All' button",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    }
+  ]
+}
+{% endschema %}
+
+<div class="memorial-stories-wall" style="background-color: {{ block.settings.background_color }};">
+  <div class="memorial-stories-container">
+    {% if block.settings.heading != blank %}
+      <h2 class="memorial-stories-heading" style="color: {{ block.settings.heading_color }};">
+        {{ block.settings.heading }}
+      </h2>
+    {% endif %}
+
+    {% if block.settings.description != blank %}
+      <p class="memorial-stories-description">
+        {{ block.settings.description }}
+      </p>
+    {% endif %}
+
+    <div class="memorial-stories-grid" data-columns="{{ block.settings.stories_per_row }}">
+      {% comment %}
+        This loads your actual stories page with all its beautiful design!
+        The iframe seamlessly embeds your /stories route into the theme.
+      {% endcomment %}
+
+      <div class="memorial-story-embed">
+        <iframe
+          src="/apps/stories-app/stories?embed=wall"
+          width="100%"
+          height="auto"
+          style="min-height: 800px; border: none; display: block;"
+          frameborder="0"
+          loading="lazy"
+          title="Memorial Stories Wall"
+          id="memorial-stories-iframe"
+        ></iframe>
+      </div>
+    </div>
+
+    <script>
+      // Auto-resize iframe to fit content
+      window.addEventListener('message', function(e) {
+        if (e.data.type === 'resize-iframe') {
+          const iframe = document.getElementById('memorial-stories-iframe');
+          if (iframe) {
+            iframe.style.height = e.data.height + 'px';
+          }
+        }
+      });
+    </script>
+
+    {% if block.settings.show_view_all_button %}
+      <div class="memorial-stories-actions">
+        <a href="/apps/stories-app/stories" class="memorial-stories-button">
+          View All Stories
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .memorial-stories-wall {
+    padding: 60px 20px;
+  }
+
+  .memorial-stories-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .memorial-stories-heading {
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .memorial-stories-description {
+    font-size: 1.1rem;
+    text-align: center;
+    color: #666;
+    margin-bottom: 3rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .memorial-stories-grid {
+    margin-bottom: 2rem;
+  }
+
+  .memorial-story-embed {
+    width: 100%;
+    min-height: 600px;
+  }
+
+  .memorial-stories-actions {
+    text-align: center;
+    margin-top: 2rem;
+  }
+
+  .memorial-stories-button {
+    display: inline-block;
+    padding: 14px 32px;
+    background-color: #000;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .memorial-stories-button:hover {
+    background-color: #333;
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 768px) {
+    .memorial-stories-heading {
+      font-size: 2rem;
+    }
+
+    .memorial-stories-wall {
+      padding: 40px 15px;
+    }
+  }
+</style>

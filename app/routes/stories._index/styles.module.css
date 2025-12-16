@@ -5,14 +5,106 @@
 .pageContainer {
   min-height: 100vh;
   background: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Header */
+/* Memorial Wall Header */
+.memorialWallHeader {
+  background: #ffffff;
+  max-width: 1400px;
+  margin: 0 auto 40px;
+}
+
+.memorialWallTitle {
+  margin: 0 0 16px 0;
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: #000000;
+  border-bottom: 3px solid #000;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.memorialWallDescription {
+  margin: 0 0 32px 0;
+  font-size: 1.1rem;
+  color: #333333;
+  line-height: 1.6;
+  max-width: 900px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* Stats Container */
+.statsContainer {
+  display: flex;
+  gap: 32px;
+  margin-top: 24px;
+}
+
+.statBox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.statLabel {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #000000;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.headingButtons {
+  padding: 12px 32px;
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.headingButtons:hover {
+  background: #b91c1c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.headingButtonsActive {
+  background: #991b1b;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Section Header */
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto 32px;
+  padding: 0px 25px;
+  border-bottom: 3px solid #000000;
+  background: #ffffff;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #000000;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* Old Header Styles (kept for backward compatibility) */
 .pageHeader {
   background: #ffffff;
   border-bottom: 3px solid #040404;
@@ -43,7 +135,7 @@
   display: block;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 0 20px 40px;
 }
 
 /* Filter Toggle Button */
@@ -78,12 +170,11 @@
 .filterDropdown {
   position: absolute;
   top: 100%;
-  left: 0;
+  right: 0;
   margin-top: 8px;
   background: #ffffff;
   border: 1px solid #d0d0d0;
   border-radius: 12px;
-  padding: 16px;
   min-width: 280px;
   max-width: 350px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -114,12 +205,6 @@
   position: relative;
 }
 
-.filterGroup {
-  margin-bottom: 12px;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 12px;
-}
-
 .filterGroup:last-of-type {
   border-bottom: none;
   padding-bottom: 0;
@@ -131,7 +216,6 @@
   background: #ffffff;
   color: #000000;
   border: 1px solid #d0d0d0;
-  border-radius: 6px;
   text-align: left;
   font-size: 0.95rem;
   font-weight: 500;
@@ -277,10 +361,14 @@
 }
 
 .silhouetteContainer::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(0,0,0,0.03) 0%, transparent 70%);
+  background: radial-gradient(
+    circle at center,
+    rgba(0, 0, 0, 0.03) 0%,
+    transparent 70%
+  );
 }
 
 .silhouette {
@@ -334,20 +422,35 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   width: 100%;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
 .memorialDetails {
   font-size: 0.9rem;
   color: #070707;
   margin-bottom: 25px;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
 .memorialLocation {
   font-size: 0.9rem;
   color: #cccccc;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
 /* Empty State */
@@ -500,6 +603,36 @@
 
 /* Tablet Responsive */
 @media (max-width: 1024px) {
+  .memorialWallHeader {
+    padding: 32px 24px;
+    margin: 0 20px 32px;
+  }
+
+  .memorialWallTitle {
+    font-size: 2.8rem;
+  }
+
+  .memorialWallDescription {
+    font-size: 1rem;
+  }
+
+  .statsContainer {
+    gap: 24px;
+  }
+
+  .statLabel {
+    font-size: 1.2rem;
+  }
+
+  .sectionHeader {
+    padding: 20px 24px;
+    margin: 0 20px 24px;
+  }
+
+  .sectionTitle {
+    font-size: 2rem;
+  }
+
   .mainTitle {
     font-size: 2.5rem;
   }
@@ -554,6 +687,45 @@
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+  .memorialWallHeader {
+    padding: 24px 16px;
+    margin: 0 12px 24px;
+  }
+
+  .memorialWallTitle {
+    font-size: 2.2rem;
+  }
+
+  .memorialWallDescription {
+    font-size: 0.95rem;
+  }
+
+  .statsContainer {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .statLabel {
+    font-size: 1.1rem;
+  }
+
+  .filterButton {
+    width: 100%;
+    padding: 12px 24px;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 16px;
+    margin: 0 12px 20px;
+  }
+
+  .sectionTitle {
+    font-size: 1.8rem;
+  }
+
   .pageHeader {
     padding: 30px 16px;
   }
@@ -625,6 +797,32 @@
 }
 
 @media (max-width: 480px) {
+  .memorialWallHeader {
+    padding: 20px 16px;
+    margin: 0 8px 20px;
+  }
+
+  .memorialWallTitle {
+    font-size: 1.8rem;
+  }
+
+  .memorialWallDescription {
+    font-size: 0.9rem;
+  }
+
+  .statLabel {
+    font-size: 1rem;
+  }
+
+  .sectionHeader {
+    padding: 16px;
+    margin: 0 8px 16px;
+  }
+
+  .sectionTitle {
+    font-size: 1.5rem;
+  }
+
   .memorialsGrid {
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;

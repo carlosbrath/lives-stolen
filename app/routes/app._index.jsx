@@ -10,9 +10,16 @@ import {
   InlineStack,
   Banner,
   List,
+  Icon,
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
+import {
+  ListBulletedIcon,
+  ViewIcon,
+  SettingsIcon,
+  PlusCircleIcon,
+} from "@shopify/polaris-icons";
 
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
@@ -51,37 +58,151 @@ export default function Index() {
     navigate("/app/submissions");
   };
 
+  const goToStoriesPage = () => {
+    window.open("/stories", "_blank");
+  };
+
+  const goToSubmitForm = () => {
+    window.open("/submit-story", "_blank");
+  };
+
   return (
     <Page>
       <TitleBar title="Story App - Dashboard" />
       <BlockStack gap="500">
+        {/* Quick Actions Section */}
         <Layout>
           <Layout.Section>
-            <Card>
-              <BlockStack gap="500">
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingLg">
+                Quick Actions
+              </Text>
+              <Layout>
+                <Layout.Section variant="oneHalf">
+                  <Card>
+                    <BlockStack gap="400">
+                      <InlineStack align="space-between" blockAlign="center">
+                        <InlineStack gap="300" blockAlign="center">
+                          <Icon source={ListBulletedIcon} tone="base" />
+                          <Text as="h3" variant="headingMd">
+                            Manage Submissions
+                          </Text>
+                        </InlineStack>
+                      </InlineStack>
+                      <Text as="p" variant="bodyMd" tone="subdued">
+                        Review, approve, edit, and publish customer story submissions from your database.
+                      </Text>
+                      <InlineStack gap="200">
+                        <Button variant="primary" onClick={goToSubmissions}>
+                          View All Submissions
+                        </Button>
+                      </InlineStack>
+                    </BlockStack>
+                  </Card>
+                </Layout.Section>
+
+                <Layout.Section variant="oneHalf">
+                  <Card>
+                    <BlockStack gap="400">
+                      <InlineStack align="space-between" blockAlign="center">
+                        <InlineStack gap="300" blockAlign="center">
+                          <Icon source={ViewIcon} tone="base" />
+                          <Text as="h3" variant="headingMd">
+                            Public Story Wall
+                          </Text>
+                        </InlineStack>
+                      </InlineStack>
+                      <Text as="p" variant="bodyMd" tone="subdued">
+                        View the public memorial wall where published stories are displayed to visitors.
+                      </Text>
+                      <InlineStack gap="200">
+                        <Button onClick={goToStoriesPage}>
+                          View Stories Page
+                        </Button>
+                      </InlineStack>
+                    </BlockStack>
+                  </Card>
+                </Layout.Section>
+
+                <Layout.Section variant="oneHalf">
+                  <Card>
+                    <BlockStack gap="400">
+                      <InlineStack align="space-between" blockAlign="center">
+                        <InlineStack gap="300" blockAlign="center">
+                          <Icon source={PlusCircleIcon} tone="base" />
+                          <Text as="h3" variant="headingMd">
+                            Submit New Story
+                          </Text>
+                        </InlineStack>
+                      </InlineStack>
+                      <Text as="p" variant="bodyMd" tone="subdued">
+                        Access the public submission form that customers use to share their stories.
+                      </Text>
+                      <InlineStack gap="200">
+                        <Button onClick={goToSubmitForm}>
+                          Open Submission Form
+                        </Button>
+                      </InlineStack>
+                    </BlockStack>
+                  </Card>
+                </Layout.Section>
+
+                
+              </Layout>
+            </BlockStack>
+          </Layout.Section>
+        </Layout>
+
+        {/* Status Messages */}
+        {setupComplete && (
+          <Layout>
+            <Layout.Section>
+              <Banner tone="success">
+                <p>
+                  Metaobject definition created successfully! You can now start accepting story
+                  submissions.
+                </p>
+              </Banner>
+            </Layout.Section>
+          </Layout>
+        )}
+
+        {setupFetcher.data?.definition && (
+          <Layout>
+            <Layout.Section>
+              <Banner tone="info">
                 <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Welcome to Story App
+                  <Text as="p" variant="bodyMd">
+                    <strong>Metaobject Definition:</strong> {setupFetcher.data.definition.name} (
+                    {setupFetcher.data.definition.type})
                   </Text>
-                  <Text variant="bodyMd" as="p">
-                    This app allows your customers to submit memorial stories that can be displayed
-                    on your storefront. Stories are stored as Shopify metaobjects for seamless
-                    integration with your theme.
-                  </Text>
+                  {setupFetcher.data.alreadyExists && (
+                    <Text as="p" variant="bodyMd">
+                      The metaobject definition already exists - no action needed!
+                    </Text>
+                  )}
                 </BlockStack>
+              </Banner>
+            </Layout.Section>
+          </Layout>
+        )}
 
-                {setupComplete && (
-                  <Banner tone="success">
-                    <p>
-                      Metaobject definition created successfully! You can now start accepting story
-                      submissions.
-                    </p>
-                  </Banner>
-                )}
-
+        {/* Information Section */}
+        <Layout>
+          <Layout.Section variant="oneHalf">
+            <Card>
+              <BlockStack gap="400">
+                <Text as="h2" variant="headingMd">
+                  About Story App
+                </Text>
+                <Text variant="bodyMd" as="p">
+                  This app allows your customers to submit memorial stories that can be displayed
+                  on your storefront. Stories are stored as Shopify metaobjects for seamless
+                  integration with your theme.
+                </Text>
                 <BlockStack gap="300">
-                  <Text as="h3" variant="headingMd">
-                    Quick Start
+                  <Text as="h3" variant="headingSm">
+                    How It Works
                   </Text>
                   <List type="number">
                     <List.Item>
@@ -99,90 +220,89 @@ export default function Index() {
                     </List.Item>
                   </List>
                 </BlockStack>
-
-                <InlineStack gap="300">
-                  <Button
-                    variant="primary"
-                    loading={isSettingUp}
-                    onClick={runSetup}
-                  >
-                    Run Initial Setup
-                  </Button>
-                  <Button onClick={goToSubmissions}>
-                    View Submissions
-                  </Button>
-                </InlineStack>
-
-                {setupFetcher.data?.definition && (
-                  <Banner tone="info">
-                    <BlockStack gap="200">
-                      <Text as="p" variant="bodyMd">
-                        <strong>Metaobject Definition:</strong> {setupFetcher.data.definition.name} (
-                        {setupFetcher.data.definition.type})
-                      </Text>
-                      {setupFetcher.data.alreadyExists && (
-                        <Text as="p" variant="bodyMd">
-                          The metaobject definition already exists - no action needed!
-                        </Text>
-                      )}
-                    </BlockStack>
-                  </Banner>
-                )}
               </BlockStack>
             </Card>
           </Layout.Section>
 
-          <Layout.Section variant="oneThird">
+          <Layout.Section variant="oneHalf">
             <BlockStack gap="500">
               <Card>
-                <BlockStack gap="200">
+                <BlockStack gap="400">
                   <Text as="h2" variant="headingMd">
-                    Features
+                    Key Features
                   </Text>
                   <List>
-                    <List.Item>Public story submission form</List.Item>
-                    <List.Item>Admin submission review dashboard</List.Item>
-                    <List.Item>Photo upload support</List.Item>
-                    <List.Item>Shopify metaobject integration</List.Item>
+                    <List.Item>Public story submission form with photo upload</List.Item>
+                    <List.Item>Admin review dashboard for managing submissions</List.Item>
+                    <List.Item>Shopify metaobject integration for seamless theme display</List.Item>
+                    <List.Item>Approval workflow (pending → approved → published)</List.Item>
                     <List.Item>GDPR compliant data handling</List.Item>
                   </List>
                 </BlockStack>
               </Card>
 
               <Card>
-                <BlockStack gap="200">
+                <BlockStack gap="400">
                   <Text as="h2" variant="headingMd">
-                    Public URLs
+                    Public Pages
                   </Text>
-                  <BlockStack gap="200">
-                    <Text as="p" variant="bodyMd">
-                      <strong>Submission Form:</strong>
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      /stories (public memorial wall + form)
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      /submit-story (standalone form)
-                    </Text>
+                  <BlockStack gap="300">
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodyMd" fontWeight="semibold">
+                        Memorial Wall & Form
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        /stories - Public page with story wall and submission form
+                      </Text>
+                      <Button size="slim" onClick={goToStoriesPage}>
+                        Open Stories Page
+                      </Button>
+                    </BlockStack>
+
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodyMd" fontWeight="semibold">
+                        Standalone Form
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        /submit-story - Direct link to submission form only
+                      </Text>
+                      <Button size="slim" onClick={goToSubmitForm}>
+                        Open Form
+                      </Button>
+                    </BlockStack>
+
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodyMd" fontWeight="semibold">
+                        Individual Stories
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        /stories/:id - View individual published story details
+                      </Text>
+                    </BlockStack>
                   </BlockStack>
                 </BlockStack>
               </Card>
 
               <Card>
-                <BlockStack gap="200">
+                <BlockStack gap="400">
                   <Text as="h2" variant="headingMd">
-                    Resources
+                    Additional Resources
                   </Text>
                   <List>
                     <List.Item>
-                      View DEPLOYMENT_GUIDE.md for production setup
+                      <Text as="span" variant="bodySm">
+                        Privacy Policy: /privacy-policy
+                      </Text>
                     </List.Item>
                     <List.Item>
-                      Check APP_CONFIG_INFO.md for configuration details
+                      <Text as="span" variant="bodySm">
+                        Terms of Service: /terms-of-service
+                      </Text>
                     </List.Item>
                     <List.Item>
-                      Privacy Policy and Terms of Service are available at /privacy-policy and
-                      /terms-of-service
+                      <Text as="span" variant="bodySm">
+                        Check documentation files for deployment and configuration details
+                      </Text>
                     </List.Item>
                   </List>
                 </BlockStack>
