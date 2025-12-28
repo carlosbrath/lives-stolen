@@ -71,10 +71,41 @@ export async function createBlogPostInShopify(
 
 /**
  * Get the session for a specific store
+ * Tries offline session first, then falls back to database lookup
  */
 export async function getStoreSession(shop) {
-  const session = await sessionStorage.loadSession(shop);
-  return session;
+  try {
+    // Normalize shop domain
+    let normalizedShop = shop;
+    if (!shop.includes('.myshopify.com') && !shop.includes('.')) {
+      normalizedShop = `${shop}.myshopify.com`;
+    }
+
+    // Try loading offline session first (more stable for background operations)
+    const offlineSessionId = `offline_${normalizedShop}`;
+    let session = await sessionStorage.loadSession(offlineSessionId);
+
+    if (session && session.accessToken) {
+      return session;
+    }
+
+    // Fallback: try finding any session for this shop in database
+    const sessionRecord = await prisma.session.findFirst({
+      where: { shop: normalizedShop },
+      orderBy: { id: 'desc' }
+    });
+
+    if (sessionRecord && sessionRecord.content) {
+      // Parse the session JSON
+      const parsedSession = JSON.parse(sessionRecord.content);
+      return parsedSession;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error loading session:", error);
+    return null;
+  }
 }
 
 /**
@@ -270,6 +301,41 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
   }
 
   return uploadedUrls;
+}
+
+/**
+ * Upload images for public submissions (requires shop domain)
+ * Loads session from shop domain instead of using authenticated session
+ * @param {string} shop - Shop domain
+ * @param {Array} files - Array of file objects
+ * @returns {Promise<Array>} Array of CDN URLs
+ */
+export async function uploadImagesForPublicSubmission(shop, files) {
+  if (!files || files.length === 0) {
+    return [];
+  }
+
+  try {
+    // Load session for the shop
+    const session = await getStoreSession(shop);
+
+    if (!session || !session.accessToken) {
+      throw new Error(`No active session found for shop: ${shop}. App may not be installed.`);
+    }
+
+    // Normalize shop domain
+    let normalizedShop = shop;
+    if (!shop.includes('.myshopify.com') && !shop.includes('.')) {
+      normalizedShop = `${shop}.myshopify.com`;
+    }
+
+    // Call existing uploadImagesToShopify with shop and token
+    return await uploadImagesToShopify(normalizedShop, session.accessToken, files);
+
+  } catch (error) {
+    console.error("Error uploading images for public submission:", error);
+    throw new Error(`Failed to upload images: ${error.message}`);
+  }
 }
 
 /**

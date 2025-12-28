@@ -1,186 +1,417 @@
 {% comment %}
-  Memorial Stories Wall Block
-  Displays a grid of published memorial stories
+  Memorial Stories Wall Block - Complete Page
+  Displays memorial wall with filters and submission form
 {% endcomment %}
 
 {% schema %}
 {
-  "name": "Memorial Stories Wall",
+  "name": "Stories Wall",
   "target": "section",
   "settings": [
     {
       "type": "text",
       "id": "heading",
       "label": "Heading",
-      "default": "Memorial Stories"
+      "default": "Memorial Wall"
     },
     {
       "type": "textarea",
       "id": "description",
       "label": "Description",
-      "default": "Read and share stories from our community"
+      "default": "Road violence doesn't just take lives, it shatters the lives of survivors and families. Together, these walls show the full impact."
+    },
+    {
+      "type": "text",
+      "id": "form_heading",
+      "label": "Form Section Heading",
+      "default": "Lost someone you love to traffic violence?"
+    },
+    {
+      "type": "text",
+      "id": "form_subheading",
+      "label": "Form Section Subheading",
+      "default": "Honor their memory. Share their story."
     },
     {
       "type": "range",
-      "id": "stories_per_row",
-      "label": "Stories per row",
-      "min": 2,
-      "max": 4,
-      "step": 1,
-      "default": 3
-    },
-    {
-      "type": "range",
-      "id": "max_stories",
-      "label": "Maximum stories to show",
-      "min": 3,
-      "max": 12,
-      "step": 1,
-      "default": 6
-    },
-    {
-      "type": "checkbox",
-      "id": "show_view_all_button",
-      "label": "Show 'View All' button",
-      "default": true
-    },
-    {
-      "type": "color",
-      "id": "heading_color",
-      "label": "Heading color",
-      "default": "#000000"
-    },
-    {
-      "type": "color",
-      "id": "background_color",
-      "label": "Background color",
-      "default": "#ffffff"
+      "id": "initial_load",
+      "label": "Initial stories to load",
+      "min": 6,
+      "max": 24,
+      "step": 6,
+      "default": 12
     }
   ]
 }
 {% endschema %}
 
-<div class="memorial-stories-wall" style="background-color: {{ block.settings.background_color }};">
-  <div class="memorial-stories-container">
-    {% if block.settings.heading != blank %}
-      <h2 class="memorial-stories-heading" style="color: {{ block.settings.heading_color }};">
-        {{ block.settings.heading }}
-      </h2>
-    {% endif %}
+<div class="memorial-page-container">
+  <!-- Memorial Wall Header -->
+  <header class="memorial-wall-header">
+    <h1 class="memorial-wall-title">{{ block.settings.heading }}</h1>
+    <p class="memorial-wall-description">{{ block.settings.description }}</p>
 
-    {% if block.settings.description != blank %}
-      <p class="memorial-stories-description">
-        {{ block.settings.description }}
-      </p>
-    {% endif %}
+    <!-- Stats and Filter Buttons -->
+    <div class="memorial-stats-container">
+      <div class="memorial-stat-box">
+        <h3 class="memorial-stat-label">Lives Stolen: <span id="lives-stolen-count">0</span></h3>
+        <button class="memorial-heading-button memorial-heading-button-active" id="filter-fatal">
+          See Lives Stolenmnnn
+        </button>
+      </div>
 
-    <div class="memorial-stories-grid" data-columns="{{ block.settings.stories_per_row }}">
-      {% comment %}
-        This loads your actual stories page with all its beautiful design!
-        The iframe seamlessly embeds your /stories route into the theme.
-      {% endcomment %}
-
-      <div class="memorial-story-embed">
-        <iframe
-          src="/apps/stories-app/stories?embed=wall"
-          width="100%"
-          height="auto"
-          style="min-height: 800px; border: none; display: block;"
-          frameborder="0"
-          loading="lazy"
-          title="Memorial Stories Wall"
-          id="memorial-stories-iframe"
-        ></iframe>
+      <div class="memorial-stat-box">
+        <h3 class="memorial-stat-label">Lives Shattered: <span id="lives-shattered-count">0</span></h3>
+        <button class="memorial-heading-button" id="filter-nonfatal">
+          See Lives Shattered
+        </button>
       </div>
     </div>
+  </header>
 
-    <script>
-      // Auto-resize iframe to fit content
-      window.addEventListener('message', function(e) {
-        if (e.data.type === 'resize-iframe') {
-          const iframe = document.getElementById('memorial-stories-iframe');
-          if (iframe) {
-            iframe.style.height = e.data.height + 'px';
-          }
-        }
-      });
-    </script>
+  <!-- Section Title and Additional Filters -->
+  <div class="memorial-section-header">
+    <h2 class="memorial-section-title" id="current-section-title">Lives Stolen</h2>
 
-    {% if block.settings.show_view_all_button %}
-      <div class="memorial-stories-actions">
-        <a href="/apps/stories-app/stories" class="memorial-stories-button">
-          View All Stories
-        </a>
+    <div class="memorial-filter-container">
+      <!-- Filter Toggle Button -->
+      <button class="memorial-filter-toggle-button" id="filter-toggle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 6h18M7 12h10M10 18h4" />
+        </svg>
+        Filter
+      </button>
+
+      <!-- Filter Dropdown -->
+      <div class="memorial-filter-dropdown" id="filter-dropdown" style="display: none;">
+        <!-- Road User Type -->
+        <div class="memorial-filter-group">
+          <button class="memorial-filter-button" data-filter-group="roadUserType">
+            <span>Road-user type</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+          <div class="memorial-filter-options">
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="roadUserType" value="Cyclist">
+              <span>Cyclist</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="roadUserType" value="Pedestrian">
+              <span>Pedestrian</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="roadUserType" value="Motorcyclist">
+              <span>Motorcyclist</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Age Range -->
+        <div class="memorial-filter-group">
+          <button class="memorial-filter-button" data-filter-group="ageRange">
+            <span>Age range</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+          <div class="memorial-filter-options">
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="ageRange" value="0-17">
+              <span>0-17</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="ageRange" value="18-30">
+              <span>18-30</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="ageRange" value="31-45">
+              <span>31-45</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="ageRange" value="46-60">
+              <span>46-60</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="ageRange" value="60+">
+              <span>60+</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Gender -->
+        <div class="memorial-filter-group">
+          <button class="memorial-filter-button" data-filter-group="gender">
+            <span>Gender</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+          <div class="memorial-filter-options">
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="gender" value="Male">
+              <span>Male</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="gender" value="Female">
+              <span>Female</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="gender" value="Other">
+              <span>Other</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- State -->
+        <div class="memorial-filter-group">
+          <button class="memorial-filter-button" data-filter-group="state">
+            <span>State</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+          <div class="memorial-filter-options">
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="state" value="California">
+              <span>California</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="state" value="New York">
+              <span>New York</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="state" value="Texas">
+              <span>Texas</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="state" value="Washington">
+              <span>Washington</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="state" value="Florida">
+              <span>Florida</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="state" value="Colorado">
+              <span>Colorado</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Year -->
+        <div class="memorial-filter-group">
+          <button class="memorial-filter-button" data-filter-group="year">
+            <span>Year</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+          <div class="memorial-filter-options">
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="year" value="2025">
+              <span>2025</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="year" value="2024">
+              <span>2024</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="year" value="2023">
+              <span>2023</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="year" value="2022">
+              <span>2022</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="year" value="2021">
+              <span>2021</span>
+            </label>
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="year" value="2020">
+              <span>2020</span>
+            </label>
+          </div>
+        </div>
+
+        <button class="memorial-clear-filters-button" id="clear-filters" style="display: none;">
+          Clear all filters
+        </button>
       </div>
-    {% endif %}
+
+      <div class="memorial-filter-overlay" id="filter-overlay" style="display: none;"></div>
+    </div>
   </div>
+
+  <!-- Content Wrapper -->
+  <div class="memorial-content-wrapper">
+    <div class="memorial-memorials-section">
+      <!-- Stories Grid -->
+      <div class="memorial-memorials-grid" id="stories-grid">
+        <div class="memorial-loading">
+          <div class="memorial-loading__spinner"></div>
+          <p>Loading stories...</p>
+        </div>
+      </div>
+
+      <!-- Load More Button -->
+      <div class="memorial-load-more-container" id="load-more-container" style="display: none;">
+        <button class="memorial-load-more-button" id="load-more-button">
+          Load More
+        </button>
+      </div>
+
+      <!-- Empty State -->
+      <div class="memorial-empty-state" id="empty-state" style="display: none;">
+        <p>No memorials found matching your filters.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit Story Form Section -->
+  <section class="memorial-form-section-wrapper" id="submit-story">
+    <div class="memorial-form-section-header">
+      <h2 class="memorial-form-section-title">{{ block.settings.form_heading }}</h2>
+      <p class="memorial-form-section-subtitle">{{ block.settings.form_subheading }}</p>
+    </div>
+
+    <!-- Form Container -->
+    <div class="memorial-form-container-wrapper">
+      <form id="memorial-submission-form" class="memorial-form">
+        <div class="memorial-form-row">
+          <div class="memorial-form-group">
+            <label for="submitterName">Your Name *</label>
+            <input type="text" id="submitterName" name="submitterName" required>
+          </div>
+          <div class="memorial-form-group">
+            <label for="submitterEmail">Your Email *</label>
+            <input type="email" id="submitterEmail" name="submitterEmail" required>
+          </div>
+        </div>
+
+        <div class="memorial-form-row">
+          <div class="memorial-form-group">
+            <label for="victimName">Victim's Name</label>
+            <input type="text" id="victimName" name="victimName">
+          </div>
+          <div class="memorial-form-group">
+            <label for="relation">Your Relation to Victim</label>
+            <input type="text" id="relation" name="relation">
+          </div>
+        </div>
+
+        <div class="memorial-form-row">
+          <div class="memorial-form-group">
+            <label for="incidentDate">Incident Date *</label>
+            <input type="date" id="incidentDate" name="incidentDate" required>
+          </div>
+          <div class="memorial-form-group">
+            <label for="state">State *</label>
+            <select id="state" name="state" required>
+              <option value="">Select a state</option>
+              <option value="California">California</option>
+              <option value="New York">New York</option>
+              <option value="Texas">Texas</option>
+              <option value="Washington">Washington</option>
+              <option value="Florida">Florida</option>
+              <option value="Colorado">Colorado</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="memorial-form-row">
+          <div class="memorial-form-group">
+            <label for="roadUserType">Road User Type *</label>
+            <select id="roadUserType" name="roadUserType" required>
+              <option value="">Select type</option>
+              <option value="Cyclist">Cyclist</option>
+              <option value="Pedestrian">Pedestrian</option>
+              <option value="Motorcyclist">Motorcyclist</option>
+            </select>
+          </div>
+          <div class="memorial-form-group">
+            <label for="injuryType">Injury Type *</label>
+            <select id="injuryType" name="injuryType" required>
+              <option value="">Select type</option>
+              <option value="Fatal">Fatal</option>
+              <option value="Non-fatal">Non-fatal</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="memorial-form-row">
+          <div class="memorial-form-group">
+            <label for="age">Age</label>
+            <input type="number" id="age" name="age" min="0" max="120">
+          </div>
+          <div class="memorial-form-group">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender">
+              <option value="">Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="memorial-form-group">
+          <label for="victimStory">Tell Their Story *</label>
+          <textarea id="victimStory" name="victimStory" rows="8" required placeholder="Share the story of your loved one..."></textarea>
+        </div>
+
+        <div class="memorial-form-group">
+          <label for="photo-upload">Photos (optional, max 10)</label>
+          <input
+            type="file"
+            id="photo-upload"
+            name="photos"
+            accept="image/*"
+            multiple
+            max="10"
+          >
+          <span id="file-count" style="display: block; margin-top: 0.5rem; font-size: 0.9em; color: #666;">No files selected</span>
+        </div>
+
+        <div class="memorial-form-error" id="form-error" style="display: none;"></div>
+
+        <button type="submit" class="memorial-form-submit" id="submit-button">
+          <span class="submit-text">Submit Story</span>
+          <span class="submit-loading" style="display: none;">Submitting...</span>
+        </button>
+      </form>
+
+      <!-- Success Message -->
+      <div id="memorial-form-success" class="memorial-success-overlay" style="display: none;">
+        <div class="memorial-success-card">
+          <div class="memorial-success-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          </div>
+          <h2 class="memorial-success-title">Thank You!</h2>
+          <p class="memorial-success-message">Your submission has been received. We appreciate you sharing this story.</p>
+          <button class="memorial-success-button" onclick="window.location.href='#memorial-stories-wall'">
+            Return to Memorial Wall
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 
-<style>
-  .memorial-stories-wall {
-    padding: 60px 20px;
-  }
+<!-- Load CSS from app -->
+<link rel="stylesheet" href="https://stories-app.fly.dev/assets/memorial-stories.css">
 
-  .memorial-stories-container {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
+<!-- Load JavaScript from app -->
+<script src="https://stories-app.fly.dev/assets/memorial-stories.js" defer></script>
 
-  .memorial-stories-heading {
-    font-size: 2.5rem;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 1rem;
-  }
-
-  .memorial-stories-description {
-    font-size: 1.1rem;
-    text-align: center;
-    color: #666;
-    margin-bottom: 3rem;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .memorial-stories-grid {
-    margin-bottom: 2rem;
-  }
-
-  .memorial-story-embed {
-    width: 100%;
-    min-height: 600px;
-  }
-
-  .memorial-stories-actions {
-    text-align: center;
-    margin-top: 2rem;
-  }
-
-  .memorial-stories-button {
-    display: inline-block;
-    padding: 14px 32px;
-    background-color: #000;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-  }
-
-  .memorial-stories-button:hover {
-    background-color: #333;
-    transform: translateY(-2px);
-  }
-
-  @media (max-width: 768px) {
-    .memorial-stories-heading {
-      font-size: 2rem;
-    }
-
-    .memorial-stories-wall {
-      padding: 40px 15px;
-    }
-  }
-</style>
+<script>
+  window.MEMORIAL_SETTINGS = {
+    initialLoad: {{ block.settings.initial_load }},
+    apiBaseUrl: 'https://stories-app.fly.dev',
+    shop: "{{ shop.permanent_domain }}"
+  };
+</script>

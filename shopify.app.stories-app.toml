@@ -6,7 +6,7 @@ application_url = "https://stories-app.fly.dev"
 embedded = true
 
 [build]
-automatically_update_urls_on_dev = true
+automatically_update_urls_on_dev = false
 
 [webhooks]
 api_version = "2025-10"
@@ -25,3 +25,8 @@ embedded = true
 
 [app_preferences]
 url = "https://stories-app.fly.dev"
+
+[app_proxy]
+url = "https://stories-app.fly.dev"
+subpath = "memorial-stories"
+prefix = "apps"

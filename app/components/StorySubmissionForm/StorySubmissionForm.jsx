@@ -116,18 +116,19 @@ function ImageUpload({ label, name, required, images, onChange, error, maxImages
 
     files.slice(0, remainingSlots).forEach((file) => {
       if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          newPreviews.push({ file, preview: reader.result, id: Date.now() + Math.random() });
-          if (newPreviews.length === files.slice(0, remainingSlots).length) {
-            setPreviews([...previews, ...newPreviews]);
-            onChange([...images, ...newPreviews]);
-          }
-        };
-        reader.readAsDataURL(file);
-        newImages.push(file);
+        // Use URL.createObjectURL for preview instead of base64
+        const previewUrl = URL.createObjectURL(file);
+        newPreviews.push({
+          file, // Store actual File object
+          preview: previewUrl, // Object URL for preview
+          id: Date.now() + Math.random()
+        });
+        newImages.push(file); // Store File object, not base64
       }
     });
+
+    setPreviews([...previews, ...newPreviews]);
+    onChange([...images, ...newImages]); // Pass File objects to parent
   };
 
   const handleRemove = (indexToRemove) => {
@@ -139,9 +140,26 @@ function ImageUpload({ label, name, required, images, onChange, error, maxImages
 
   useEffect(() => {
     if (images.length === 0) {
+      // Clean up object URLs when images are cleared
+      previews.forEach(preview => {
+        if (preview.preview && preview.preview.startsWith('blob:')) {
+          URL.revokeObjectURL(preview.preview);
+        }
+      });
       setPreviews([]);
     }
   }, [images]);
+
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      previews.forEach(preview => {
+        if (preview.preview && preview.preview.startsWith('blob:')) {
+          URL.revokeObjectURL(preview.preview);
+        }
+      });
+    };
+  }, [previews]);
 
   return (
     <div className={styles.formGroup}>
@@ -199,7 +217,7 @@ function ImageUpload({ label, name, required, images, onChange, error, maxImages
   );
 }
 
-export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData }) {
+export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData, shop }) {
   const [formData, setFormData] = useState({
     submitterName: "",
     submitterEmail: "",
@@ -216,6 +234,8 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
   });
 
   const [errors, setErrors] = useState({});
+  const [uploadError, setUploadError] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -238,7 +258,13 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Clear previous errors
+    setErrors({});
+    setUploadError(null);
+
     // Client-side validation
     const newErrors = {};
     if (!formData.submitterName) newErrors.submitterName = "Submitter name is required";
@@ -250,34 +276,57 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
     if (!formData.victimStory) newErrors.victimStory = "Victim's story is required";
 
     if (Object.keys(newErrors).length > 0) {
-      e.preventDefault();
       setErrors(newErrors);
       return;
     }
 
-    // Add image data to a hidden input before form submission
-    // This ensures Remix Form component can handle it properly
-    const form = e.target;
-    const existingPhotoInput = form.querySelector('input[name="photoUrls"]');
+    try {
+      let photoUrls = [];
 
-    if (existingPhotoInput) {
-      existingPhotoInput.remove();
+      // Step 1: Upload images if any
+      if (formData.photos.length > 0) {
+        setIsUploading(true);
+        const uploadFormData = new FormData();
+
+        // Get shop domain from window or prop
+        const shopDomain = shop || window.Shopify?.shop || window.location.hostname;
+        uploadFormData.append("shop", shopDomain);
+
+        // Append actual File objects
+        formData.photos.forEach((file) => {
+          uploadFormData.append("files", file);
+        });
+
+        const uploadResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: uploadFormData,
+        });
+
+        const uploadResult = await uploadResponse.json();
+
+        if (!uploadResult.success) {
+          throw new Error(uploadResult.error || "Image upload failed");
+        }
+
+        photoUrls = uploadResult.urls;
+        setIsUploading(false);
+      }
+
+      // Step 2: Submit story with CDN URLs
+      const submitFormData = new FormData(e.target);
+      submitFormData.set("photoUrls", JSON.stringify(photoUrls));
+      submitFormData.set("shop", shop || window.Shopify?.shop || window.location.hostname);
+
+      // Call parent onSubmit if provided, otherwise submit directly
+      if (onSubmit) {
+        await onSubmit(submitFormData);
+      }
+
+    } catch (error) {
+      console.error("Submission error:", error);
+      setUploadError(error.message);
+      setIsUploading(false);
     }
-
-    const photoInput = document.createElement('input');
-    photoInput.type = 'hidden';
-    photoInput.name = 'photoUrls';
-
-    if (formData.photos.length > 0) {
-      const imageUrls = formData.photos.map(img => img.preview);
-      photoInput.value = JSON.stringify(imageUrls);
-    } else {
-      photoInput.value = JSON.stringify([]);
-    }
-
-    form.appendChild(photoInput);
-
-    // Let Remix handle the form submission
   };
 
   useEffect(() => {
@@ -297,6 +346,25 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
               <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
             {actionData.error}
+          </div>
+        )}
+
+        {uploadError && (
+          <div className={styles.submitError}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <div>
+              <strong>Image Upload Failed</strong>
+              <p>{uploadError}</p>
+              {uploadError.includes('session') && (
+                <p style={{fontSize: '0.9em', marginTop: '0.5em'}}>
+                  The shop may need to reinstall the app.
+                </p>
+              )}
+            </div>
           </div>
         )}
 
@@ -431,9 +499,14 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
           <button
             type="submit"
             className={styles.submitButton}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploading}
           >
-            {isSubmitting ? (
+            {isUploading ? (
+              <>
+                <span className={styles.spinner}></span>
+                Uploading images...
+              </>
+            ) : isSubmitting ? (
               <>
                 <span className={styles.spinner}></span>
                 Submitting...
