@@ -1,8 +1,8 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "529097ee6d659966c848ce89c851d0b6"
+client_id = "6244d7fa908ca82cc5aaa0f1bbd68ff0"
 name = "stories-app"
-application_url = "https://stories-app.fly.dev"
+application_url = "https://stories-app.fly.dev/"
 embedded = true
 
 [webhooks]
@@ -10,23 +10,15 @@ api_version = "2025-10"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "customer_read_customers,customer_write_customers,read_files,read_metaobjects,read_publications,unauthenticated_read_content,unauthenticated_read_customers,unauthenticated_write_customers,write_files,write_metaobjects"
+scopes = "read_files,write_files,read_analytics,read_channels,write_channels,read_companies,write_companies,read_customers,write_customers,write_locations,read_locations,read_metaobject_definitions,write_metaobject_definitions,read_metaobjects,write_metaobjects,read_online_store_navigation,write_online_store_navigation,read_online_store_pages,write_online_store_pages,write_order_edits,read_order_edits,read_content,write_content,read_themes,write_themes,read_translations,write_translations,customer_read_companies,customer_write_companies,customer_read_markets,customer_read_orders,customer_write_orders,unauthenticated_read_bundles,unauthenticated_write_checkouts,unauthenticated_read_checkouts,unauthenticated_write_customers,unauthenticated_read_customers,unauthenticated_read_customer_tags,unauthenticated_read_metaobjects,unauthenticated_read_selling_plans,unauthenticated_read_shop_pay_installments_pricing,unauthenticated_read_content"
 optional_scopes = [ ]
 use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [ "https://stories-app.fly.dev/auth/callback" ]
-
-[app_proxy]
-url = "https://stories-app.fly.dev"
-subpath = "memorial-stories"
-prefix = "apps"
-
-[pos]
-embedded = true
+redirect_urls = [ "https://stories-app.fly.dev/" ]
 
 [app_preferences]
-url = "https://stories-app.fly.dev"
+url = "https://stories-app.fly.dev/"
 
 [build]
 automatically_update_urls_on_dev = true

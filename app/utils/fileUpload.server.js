@@ -44,6 +44,7 @@ export function normalizeShopDomain(shop) {
 export async function loadShopSession(shop) {
   try {
     const normalizedShop = normalizeShopDomain(shop);
+    console.log(`🔍 Loading session for shop: ${shop} -> normalized: ${normalizedShop}`);
 
     // Try loading offline session first (more stable for public operations)
     const offlineSessionId = `offline_${normalizedShop}`;
@@ -51,26 +52,48 @@ export async function loadShopSession(shop) {
 
     if (session && session.accessToken) {
       console.log(`✓ Loaded offline session for ${normalizedShop}`);
+      console.log(`  - Session ID: ${session.id}`);
+      console.log(`  - Access token present: ${!!session.accessToken}`);
+      console.log(`  - Access token (masked): ${session.accessToken ? session.accessToken.substring(0, 10) + '...' : 'NONE'}`);
+      console.log(`  - Shop: ${session.shop}`);
+      console.log(`  - Scope: ${session.scope || 'NOT SET'}`);
       return session;
+    } else {
+      console.warn(`⚠ Offline session not found or missing access token for ${offlineSessionId}`);
     }
 
     // Fallback: try finding any session for this shop in database
+    console.log(`🔍 Searching database for session with shop: ${normalizedShop}`);
     const sessionRecord = await prisma.session.findFirst({
       where: { shop: normalizedShop },
       orderBy: { id: 'desc' }
     });
 
     if (sessionRecord) {
-      console.log(`✓ Loaded session from database for ${normalizedShop}`);
+      console.log(`✓ Found session in database for ${normalizedShop}`);
+      console.log(`  - Session record ID: ${sessionRecord.id}`);
+      console.log(`  - Session shop: ${sessionRecord.shop}`);
       // Parse the session JSON
       const parsedSession = JSON.parse(sessionRecord.content);
+      console.log(`  - Parsed session ID: ${parsedSession.id}`);
+      console.log(`  - Access token present: ${!!parsedSession.accessToken}`);
+      console.log(`  - Access token (masked): ${parsedSession.accessToken ? parsedSession.accessToken.substring(0, 10) + '...' : 'NONE'}`);
+      console.log(`  - Scope: ${parsedSession.scope || 'NOT SET'}`);
       return parsedSession;
     }
 
-    console.warn(`⚠ No session found for ${normalizedShop}`);
+    console.error(`❌ No session found for ${normalizedShop}`);
+    console.log(`🔍 Checking all sessions in database...`);
+    const allSessions = await prisma.session.findMany({
+      select: { id: true, shop: true }
+    });
+    console.log(`  - Total sessions in database: ${allSessions.length}`);
+    allSessions.forEach(s => console.log(`    - ${s.shop} (ID: ${s.id})`));
+
     return null;
   } catch (error) {
-    console.error(`Error loading session for ${shop}:`, error);
+    console.error(`❌ Error loading session for ${shop}:`, error);
+    console.error(`Error stack:`, error.stack);
     return null;
   }
 }

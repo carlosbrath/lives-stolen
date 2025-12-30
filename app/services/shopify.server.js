@@ -235,6 +235,11 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
         ],
       };
 
+      console.log(`🔐 Making staged upload request to shop: ${shop}`);
+      console.log(`  - URL: https://${shop}/admin/api/2025-01/graphql.json`);
+      console.log(`  - Access token (masked): ${accessToken ? accessToken.substring(0, 10) + '...' : 'MISSING!'}`);
+      console.log(`  - Access token length: ${accessToken ? accessToken.length : 0}`);
+
       const stagedResponse = await fetch(
         `https://${shop}/admin/api/2025-01/graphql.json`,
         {
@@ -250,11 +255,16 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
         }
       );
 
+      console.log(`📡 Staged upload response status: ${stagedResponse.status} ${stagedResponse.statusText}`);
+
       const stagedResult = await stagedResponse.json();
+      console.log(`📋 Staged upload result:`, JSON.stringify(stagedResult, null, 2));
 
       if (stagedResult.errors) {
         const errorMsg = `Staged upload GraphQL error: ${JSON.stringify(stagedResult.errors)}`;
         console.error(errorMsg);
+        console.error(`  - This usually means the access token is invalid, expired, or doesn't have the required scopes`);
+        console.error(`  - Check that the app has 'write_files' scope and is properly installed on the shop`);
         errors.push(errorMsg);
         continue;
       }

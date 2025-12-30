@@ -2,11 +2,12 @@
  * Memorial Stories - Shared JavaScript
  * Handles API calls, filtering, and interactions for all story blocks
  * Matching functionality from app/routes/stories._index/route.jsx
+ * New deployment: https://stories-app.fly.dev 12/30/2025
  */
 
 class MemorialStoriesAPI {
   constructor(baseUrl) {
-    this.baseUrl = baseUrl || 'https://stories-app.fly.dev';
+    this.baseUrl = baseUrl || 'https://stories-app.fly.dev/';
   }
 
   /**
