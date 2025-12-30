@@ -122,6 +122,68 @@ export async function getAccessTokenForStore(shop) {
 }
 
 /**
+ * Poll for file URL after creation (for files that need processing)
+ * @param {string} shop - Shop domain
+ * @param {string} accessToken - Access token
+ * @param {string} fileId - File GID
+ * @returns {Promise<string|null>} File URL or null
+ */
+async function pollForFileUrl(shop, accessToken, fileId, maxAttempts = 10) {
+  const query = `
+    query getFile($id: ID!) {
+      node(id: $id) {
+        ... on MediaImage {
+          id
+          image {
+            url
+            originalSrc
+          }
+        }
+      }
+    }
+  `;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      console.log(`🔄 Polling attempt ${attempt}/${maxAttempts} for file URL...`);
+
+      const response = await fetch(
+        `https://${shop}/admin/api/2025-01/graphql.json`,
+        {
+          method: "POST",
+          headers: {
+            "X-Shopify-Access-Token": accessToken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query,
+            variables: { id: fileId },
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.data?.node?.image?.url) {
+        console.log(`✅ File URL retrieved: ${result.data.node.image.url}`);
+        return result.data.node.image.url;
+      }
+
+      // Wait before next attempt (exponential backoff)
+      const waitTime = Math.min(1000 * Math.pow(1.5, attempt - 1), 5000);
+      console.log(`⏳ URL not ready, waiting ${waitTime}ms...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+
+    } catch (error) {
+      console.error(`Error polling for file URL (attempt ${attempt}):`, error);
+    }
+  }
+
+  console.error(`❌ Failed to get file URL after ${maxAttempts} attempts`);
+  return null;
+}
+
+/**
  * Upload images to Shopify using Files API
  * Returns URLs that can be used in blog posts and metaobjects
  *
@@ -136,9 +198,12 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
   }
 
   const uploadedUrls = [];
+  const errors = [];
 
   for (const file of files) {
     try {
+      console.log(`📤 Uploading file: ${file.filename} (${file.mimeType})`);
+
       // Step 1: Generate staged upload URL
       const stagedUploadQuery = `
         mutation stagedUploadsCreate($input: [StagedUploadInput!]!) {
@@ -187,8 +252,17 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
 
       const stagedResult = await stagedResponse.json();
 
-      if (stagedResult.errors || stagedResult.data?.stagedUploadsCreate?.userErrors?.length > 0) {
-        console.error("Staged upload error:", stagedResult);
+      if (stagedResult.errors) {
+        const errorMsg = `Staged upload GraphQL error: ${JSON.stringify(stagedResult.errors)}`;
+        console.error(errorMsg);
+        errors.push(errorMsg);
+        continue;
+      }
+
+      if (stagedResult.data?.stagedUploadsCreate?.userErrors?.length > 0) {
+        const errorMsg = `Staged upload user error: ${JSON.stringify(stagedResult.data.stagedUploadsCreate.userErrors)}`;
+        console.error(errorMsg);
+        errors.push(errorMsg);
         continue;
       }
 
@@ -226,15 +300,21 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
       });
 
       if (!uploadResponse.ok) {
-        console.error("File upload failed:", await uploadResponse.text());
+        const errorText = await uploadResponse.text();
+        const errorMsg = `File upload to staged URL failed (${uploadResponse.status}): ${errorText}`;
+        console.error(errorMsg);
+        errors.push(errorMsg);
         continue;
       }
+
+      console.log(`✅ File uploaded to staged URL`);
 
       // Step 3: Create file record in Shopify
       const fileCreateQuery = `
         mutation fileCreate($files: [FileCreateInput!]!) {
           fileCreate(files: $files) {
             files {
+              __typename
               ... on GenericFile {
                 id
                 url
@@ -242,9 +322,11 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
               }
               ... on MediaImage {
                 id
+                alt
                 image {
                   url
                   altText
+                  originalSrc
                 }
               }
             }
@@ -260,7 +342,7 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
         files: [
           {
             alt: file.alt || file.filename || "Story image",
-            contentType: "FILE",
+            contentType: "IMAGE",
             originalSource: stagedTarget.resourceUrl,
           },
         ],
@@ -283,21 +365,59 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
 
       const fileCreateResult = await fileCreateResponse.json();
 
-      if (fileCreateResult.errors || fileCreateResult.data?.fileCreate?.userErrors?.length > 0) {
-        console.error("File create error:", fileCreateResult);
+      if (fileCreateResult.errors) {
+        const errorMsg = `File create GraphQL error: ${JSON.stringify(fileCreateResult.errors)}`;
+        console.error(errorMsg);
+        errors.push(errorMsg);
+        continue;
+      }
+
+      if (fileCreateResult.data?.fileCreate?.userErrors?.length > 0) {
+        const errorMsg = `File create user error: ${JSON.stringify(fileCreateResult.data.fileCreate.userErrors)}`;
+        console.error(errorMsg);
+        errors.push(errorMsg);
         continue;
       }
 
       const createdFile = fileCreateResult.data.fileCreate.files[0];
-      const fileUrl = createdFile.url || createdFile.image?.url;
+
+      // Debug: log the entire response to see structure
+      console.log('📋 File create response:', JSON.stringify(fileCreateResult.data.fileCreate, null, 2));
+      console.log('📋 Created file object:', JSON.stringify(createdFile, null, 2));
+
+      // Extract URL based on file type
+      let fileUrl = null;
+
+      if (createdFile.url) {
+        // GenericFile type has direct url property
+        fileUrl = createdFile.url;
+      } else if (createdFile.image?.url) {
+        // MediaImage type has nested image.url property
+        fileUrl = createdFile.image.url;
+      } else if (createdFile.__typename === 'MediaImage' && createdFile.id) {
+        // MediaImage created but URL not ready yet - poll for it
+        console.log(`⏳ MediaImage created, polling for URL...`);
+        fileUrl = await pollForFileUrl(shop, accessToken, createdFile.id);
+      }
 
       if (fileUrl) {
+        console.log(`✅ File created in Shopify: ${fileUrl}`);
         uploadedUrls.push(fileUrl);
+      } else {
+        const errorMsg = `File created but no URL returned after polling. File object: ${JSON.stringify(createdFile)}`;
+        console.error(errorMsg);
+        errors.push(errorMsg);
       }
     } catch (error) {
-      console.error("Error uploading image to Shopify:", error);
-      // Continue with next file instead of failing completely
+      const errorMsg = `Unexpected error uploading ${file.filename}: ${error.message}`;
+      console.error(errorMsg, error);
+      errors.push(errorMsg);
     }
+  }
+
+  // If all uploads failed, throw an error with details
+  if (uploadedUrls.length === 0 && errors.length > 0) {
+    throw new Error(`All image uploads failed. Errors: ${errors.join('; ')}`);
   }
 
   return uploadedUrls;

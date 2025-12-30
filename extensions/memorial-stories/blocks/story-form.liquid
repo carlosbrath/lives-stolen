@@ -187,7 +187,7 @@
     // Set up shop domain for API
     window.MEMORIAL_SETTINGS = {
       shop: "{{ shop.permanent_domain }}",
-      apiBaseUrl: 'https://stories-app.fly.dev'
+      apiBaseUrl: 'https://stories-app.fly.dev/'
     };
 
     // Handle form submission
@@ -223,7 +223,7 @@
       const formData = new FormData(form);
 
       // Initialize API and submit with files
-      const api = new MemorialStoriesAPI('https://stories-app.fly.dev');
+      const api = new MemorialStoriesAPI('https://stories-app.fly.dev/');
       const result = await api.submitStory(formData, selectedFiles);
 
       if (result.success) {

@@ -896,3 +896,801 @@
     width: 100%;
   }
 }
+
+/* ===========================================================================
+   IMAGE UPLOAD WITH DRAG & DROP
+   =========================================================================== */
+.memorial-upload-container {
+  margin-top: 8px;
+}
+
+.memorial-file-input {
+  display: none;
+}
+
+.memorial-upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  background: #ffffff;
+  border: 2px dashed #000000;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #000000;
+  min-height: 180px;
+}
+
+.memorial-upload-area:hover {
+  background: #f9f9f9;
+  border-color: #333333;
+  transform: translateY(-2px);
+}
+
+.memorial-upload-area.drag-over {
+  background: #f0f0f0;
+  border-color: #000000;
+  border-style: solid;
+  transform: scale(1.02);
+}
+
+.memorial-upload-area svg {
+  width: 48px;
+  height: 48px;
+  stroke: #000000;
+  margin-bottom: 8px;
+}
+
+.memorial-upload-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #000000;
+  margin: 0;
+}
+
+.memorial-upload-hint {
+  font-size: 0.9rem;
+  color: #666666;
+  margin: 0;
+}
+
+.memorial-upload-count {
+  font-size: 0.85rem;
+  color: #999999;
+  margin-top: 4px;
+}
+
+/* Preview Grid */
+.memorial-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.memorial-preview-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #000000;
+  background: #f5f5f5;
+  transition: all 0.2s ease;
+}
+
+.memorial-preview-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.memorial-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.memorial-preview-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.memorial-preview-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #000000;
+  border-radius: 50%;
+  animation: memorial-spin 0.8s linear infinite;
+}
+
+@keyframes memorial-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.memorial-remove-image {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  background: #dc2626;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+  z-index: 10;
+}
+
+.memorial-remove-image:hover {
+  background: #b91c1c;
+  transform: scale(1.15);
+}
+
+.memorial-remove-image svg {
+  width: 16px;
+  height: 16px;
+  stroke: #ffffff;
+  stroke-width: 3;
+}
+
+/* Upload Error */
+.memorial-upload-error {
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 2px solid #dc2626;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 0.9rem;
+  margin-top: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.memorial-upload-error svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.memorial-upload-error-content {
+  flex: 1;
+}
+
+.memorial-upload-error strong {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+/* Responsive - Image Upload */
+@media (max-width: 768px) {
+  .memorial-upload-area {
+    padding: 32px 16px;
+    min-height: 150px;
+  }
+
+  .memorial-upload-area svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .memorial-preview-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 12px;
+  }
+
+  .memorial-remove-image {
+    width: 28px;
+    height: 28px;
+  }
+
+  .memorial-remove-image svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .memorial-preview-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .memorial-upload-area {
+    padding: 24px 12px;
+    min-height: 130px;
+  }
+
+  .memorial-upload-text {
+    font-size: 0.95rem;
+  }
+
+  .memorial-upload-hint {
+    font-size: 0.85rem;
+  }
+}
+
+/* ===========================================================================
+   STORY DETAIL PAGE - NEW DESIGN
+   Matching app/routes/stories.$id design with image slider
+   =========================================================================== */
+
+/* Page Wrapper */
+.story-detail-wrapper {
+  min-height: 100vh;
+  background-color: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.story-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* Top Title Section */
+.story-detail-top-title {
+  padding: 40px 24px 24px;
+  border-bottom: 3px solid #000000;
+  margin-bottom: 32px;
+}
+
+.story-detail-injury-title {
+  margin: 0;
+  font-size: 3rem;
+  font-weight: 900;
+  color: #000000;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Header Section */
+.story-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  margin-bottom: 48px;
+}
+
+.story-detail-back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: #1f2937;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.story-detail-back-button:hover {
+  background-color: #f3f4f6;
+  color: #000000;
+}
+
+.story-detail-victim-name {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #000000;
+  letter-spacing: -0.02em;
+}
+
+/* Main Content Layout */
+.story-detail-main-content {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 64px;
+  margin-bottom: 64px;
+  padding: 0 24px;
+}
+
+/* Image Gallery Section */
+.story-detail-image-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.story-detail-image-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.story-detail-image-main {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.story-detail-image-main img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.3s ease;
+}
+
+.story-detail-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+}
+
+/* Image Navigation */
+.story-detail-nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #1f2937;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.story-detail-nav-button:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.story-detail-nav-button:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.story-detail-nav-prev {
+  left: 16px;
+}
+
+.story-detail-nav-next {
+  right: 16px;
+}
+
+/* Image Counter */
+.story-detail-image-counter {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+
+/* Thumbnails */
+.story-detail-thumbnails {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 12px;
+}
+
+.story-detail-thumbnail {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f3f4f6;
+  padding: 0;
+}
+
+.story-detail-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.story-detail-thumbnail:hover {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+}
+
+.story-detail-thumbnail-active {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* Info Section */
+.story-detail-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.story-detail-relation {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.5;
+}
+
+.story-detail-location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.story-detail-location svg {
+  flex-shrink: 0;
+}
+
+.story-detail-date {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.5;
+}
+
+.story-detail-category {
+  margin: 0;
+  font-size: 1rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+/* Share Buttons */
+.story-detail-share-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.story-detail-share-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: none;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  padding: 0;
+}
+
+.story-detail-share-button:hover {
+  background-color: #f3f4f6;
+  color: #000000;
+  transform: translateY(-2px);
+}
+
+.story-detail-share-button svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Story Content */
+.story-detail-story-section {
+  max-width: 900px;
+  padding: 0 24px 40px;
+}
+
+.story-detail-story-label {
+  margin: 0 0 16px 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.story-detail-story-text {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: #374151;
+  margin-bottom: 32px;
+}
+
+.story-detail-story-text p {
+  margin: 0 0 16px 0;
+}
+
+.story-detail-story-text p:last-child {
+  margin-bottom: 0;
+}
+
+/* Lives Button */
+.story-detail-button-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 32px;
+}
+
+.story-detail-lives-button {
+  display: inline-block;
+  background-color: #dc2626;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 14px 40px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+}
+
+.story-detail-lives-button:hover {
+  background-color: #b91c1c;
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+  transform: translateY(-1px);
+}
+
+.story-detail-lives-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+}
+
+/* Responsive - Story Detail */
+@media (max-width: 1024px) {
+  .story-detail-top-title {
+    padding: 32px 20px 20px;
+  }
+
+  .story-detail-injury-title {
+    font-size: 2.5rem;
+  }
+
+  .story-detail-header {
+    padding: 0 20px;
+  }
+
+  .story-detail-main-content {
+    grid-template-columns: 350px 1fr;
+    gap: 48px;
+    padding: 0 20px;
+  }
+
+  .story-detail-story-section {
+    padding: 0 20px 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .story-detail-top-title {
+    padding: 24px 16px 20px;
+  }
+
+  .story-detail-injury-title {
+    font-size: 2rem;
+  }
+
+  .story-detail-header {
+    margin-bottom: 32px;
+    padding: 0 16px;
+  }
+
+  .story-detail-victim-name {
+    font-size: 1.5rem;
+  }
+
+  .story-detail-back-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .story-detail-main-content {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    margin-bottom: 48px;
+    padding: 0 16px;
+  }
+
+  .story-detail-story-section {
+    padding: 0 16px 24px;
+  }
+
+  .story-detail-image-main {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .story-detail-image-gallery {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .story-detail-thumbnails {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  }
+
+  .story-detail-nav-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .story-detail-nav-button svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .story-detail-nav-prev {
+    left: 12px;
+  }
+
+  .story-detail-nav-next {
+    right: 12px;
+  }
+
+  .story-detail-image-counter {
+    bottom: 12px;
+    right: 12px;
+    font-size: 0.8rem;
+    padding: 5px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .story-detail-top-title {
+    padding: 20px 12px 16px;
+  }
+
+  .story-detail-injury-title {
+    font-size: 1.75rem;
+  }
+
+  .story-detail-header {
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 0 12px;
+  }
+
+  .story-detail-victim-name {
+    font-size: 1.25rem;
+  }
+
+  .story-detail-back-button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .story-detail-back-button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .story-detail-main-content {
+    gap: 24px;
+    margin-bottom: 32px;
+    padding: 0 12px;
+  }
+
+  .story-detail-story-section {
+    padding: 0 12px 20px;
+  }
+
+  .story-detail-image-main {
+    max-width: 100%;
+  }
+
+  .story-detail-image-gallery {
+    max-width: 100%;
+  }
+
+  .story-detail-relation {
+    font-size: 1rem;
+  }
+
+  .story-detail-location,
+  .story-detail-date,
+  .story-detail-category {
+    font-size: 0.9rem;
+  }
+
+  .story-detail-share-buttons {
+    gap: 8px;
+  }
+
+  .story-detail-share-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .story-detail-share-button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .story-detail-story-label {
+    font-size: 1rem;
+  }
+
+  .story-detail-story-text {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    margin-bottom: 24px;
+  }
+
+  .story-detail-story-text p {
+    margin-bottom: 12px;
+  }
+
+  .story-detail-button-wrapper {
+    margin-top: 24px;
+  }
+
+  .story-detail-lives-button {
+    font-size: 0.95rem;
+    padding: 12px 32px;
+  }
+
+  .story-detail-thumbnails {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 10px;
+  }
+
+  .story-detail-nav-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .story-detail-nav-button svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .story-detail-nav-prev {
+    left: 8px;
+  }
+
+  .story-detail-nav-next {
+    right: 8px;
+  }
+
+  .story-detail-image-counter {
+    bottom: 8px;
+    right: 8px;
+    font-size: 0.75rem;
+    padding: 4px 8px;
+  }
+}

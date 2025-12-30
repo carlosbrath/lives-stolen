@@ -11,7 +11,7 @@ const ALLOWED_MIME_TYPES = [
   'image/svg+xml'
 ];
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
 
 /**
@@ -192,6 +192,7 @@ export async function prepareFileForUpload(file, index) {
  * @throws {Error} If shop validation fails or upload fails
  */
 export async function uploadFilesToShopify(shop, files) {
+  console.log('testing shop')
   // Validate shop access
   const { valid, error, session } = await validateShopAccess(shop);
   if (!valid) {

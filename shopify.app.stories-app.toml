@@ -5,20 +5,22 @@ name = "stories-app"
 application_url = "https://stories-app.fly.dev"
 embedded = true
 
-[build]
-automatically_update_urls_on_dev = false
-
 [webhooks]
 api_version = "2025-10"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_files,write_files,read_metaobjects,write_metaobjects,read_publications,customer_write_customers,customer_read_customers,unauthenticated_write_customers,unauthenticated_read_customers,unauthenticated_read_content"
+scopes = "customer_read_customers,customer_write_customers,read_files,read_metaobjects,read_publications,unauthenticated_read_content,unauthenticated_read_customers,unauthenticated_write_customers,write_files,write_metaobjects"
 optional_scopes = [ ]
 use_legacy_install_flow = false
 
 [auth]
 redirect_urls = [ "https://stories-app.fly.dev/auth/callback" ]
+
+[app_proxy]
+url = "https://stories-app.fly.dev"
+subpath = "memorial-stories"
+prefix = "apps"
 
 [pos]
 embedded = true
@@ -26,7 +28,5 @@ embedded = true
 [app_preferences]
 url = "https://stories-app.fly.dev"
 
-[app_proxy]
-url = "https://stories-app.fly.dev"
-subpath = "memorial-stories"
-prefix = "apps"
+[build]
+automatically_update_urls_on_dev = true

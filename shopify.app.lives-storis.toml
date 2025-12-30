@@ -1,8 +1,8 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "5108cc85b0f5a6331d708d72a935ab54"
-name = "Lives Storis"
-application_url = "https://example.com"
+client_id = "32d06f7e07f43ac50e7795d16ea511c9"
+name = "lives-stories"
+application_url = "https://story-submissions.vercel.app/"
 embedded = true
 
 [webhooks]
@@ -10,9 +10,23 @@ api_version = "2025-10"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = ""
+scopes = "read_files,write_files,read_metaobjects,write_metaobjects,read_products,write_products"
 optional_scopes = [ ]
 use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [ ]
+redirect_urls = [
+  "https://story-submissions.vercel.app/auth/callback",
+  "https://story-submissions.vercel.app/api/auth/callback"
+]
+
+[pos]
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+
+[app_proxy]
+url = "https://story-submissions.vercel.app"
+subpath = "lives-stories"
+prefix = "apps"

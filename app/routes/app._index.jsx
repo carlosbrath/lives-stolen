@@ -75,7 +75,7 @@ export default function Index() {
           <Layout.Section>
             <BlockStack gap="400">
               <Text as="h2" variant="headingLg">
-                Quick Actions
+                Quick Actionssss
               </Text>
               <Layout>
                 <Layout.Section variant="oneHalf">

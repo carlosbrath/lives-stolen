@@ -97,7 +97,14 @@ export const action = async ({ request }) => {
   }
 
   try {
-    if (action === "update") {
+    if (action === "delete") {
+      // Handle deletion
+      await prisma.submission.delete({
+        where: { id: submissionId },
+      });
+
+      return json({ success: true, deleted: true, submissionId });
+    } else if (action === "update") {
       // Handle full story update
       const updateData = {
         submitterName: formData.get("submitterName"),
@@ -160,6 +167,7 @@ function SubmissionCard({ submission, status }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(null);
+  const [isDeleted, setIsDeleted] = useState(false);
   const previousStatusRef = useRef(null);
 
   const statusColor = {
@@ -173,6 +181,12 @@ function SubmissionCard({ submission, status }) {
 
   useEffect(() => {
     if (fetcher.data?.success && fetcher.state === "idle") {
+      if (fetcher.data.deleted) {
+        showToast("Story deleted successfully!", { type: "success", position: "top-right" });
+        setIsDeleted(true);
+        return;
+      }
+
       if (fetcher.data.updated) {
         showToast("Story updated successfully!", { type: "success", position: "top-right" });
         setIsEditing(false);
@@ -201,18 +215,29 @@ function SubmissionCard({ submission, status }) {
       approved: "Do you want to approve this story?",
       rejected: "Do you want to reject this story?",
       published: "Do you want to publish this story?",
+      delete: "⚠️ Are you sure you want to permanently delete this story? This action cannot be undone.",
     };
     setModal({ isOpen: true, action, message: messages[action] });
   };
 
   const handleConfirm = () => {
-    fetcher.submit(
-      {
-        submissionId: submission.id,
-        status: modal.action,
-      },
-      { method: "post" }
-    );
+    if (modal.action === "delete") {
+      fetcher.submit(
+        {
+          submissionId: submission.id,
+          action: "delete",
+        },
+        { method: "post" }
+      );
+    } else {
+      fetcher.submit(
+        {
+          submissionId: submission.id,
+          status: modal.action,
+        },
+        { method: "post" }
+      );
+    }
     setModal({ isOpen: false, action: null, message: "" });
   };
 
@@ -256,6 +281,11 @@ function SubmissionCard({ submission, status }) {
     setEditData(null);
   };
 
+  // Hide card if deleted
+  if (isDeleted) {
+    return null;
+  }
+
   return (
     <div className={styles.submissionCard} style={{ opacity: isUpdating ? 0.6 : 1 }}>
       <div className={styles.cardHeader}>
@@ -274,12 +304,26 @@ function SubmissionCard({ submission, status }) {
               color: isExpanded ? "#fff" : "#000",
             }}
           >
-            {isExpanded ? "Hide Details" : "View Details"}
+            {isExpanded ? "Hide" : "View"}
           </button>
           {!isEditing && (
-            <button onClick={handleEdit} className={styles.actionButton}>
-              Edit
-            </button>
+            <>
+              <button onClick={handleEdit} className={styles.actionButton}>
+                Edit
+              </button>
+              <button
+                onClick={() => openConfirmation("delete")}
+                className={styles.actionButton}
+                style={{
+                  background: "#dc2626",
+                  color: "#fff",
+                  borderColor: "#dc2626"
+                }}
+                disabled={isUpdating}
+              >
+                Delete
+              </button>
+            </>
           )}
           <span
             className={styles.statusBadge}
@@ -388,6 +432,7 @@ function SubmissionCard({ submission, status }) {
           message={modal.message}
           onConfirm={handleConfirm}
           onCancel={handleCancel}
+          isDanger={modal.action === "delete"}
         />
       )}
     </div>
@@ -764,7 +809,7 @@ function FormSelect({ label, required, value, onChange, options, placeholder }) 
   );
 }
 
-function ConfirmationModal({ message, onConfirm, onCancel }) {
+function ConfirmationModal({ message, onConfirm, onCancel, isDanger = false }) {
   return (
     <div className={styles.modalOverlay} onClick={onCancel}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -774,8 +819,12 @@ function ConfirmationModal({ message, onConfirm, onCancel }) {
           <button onClick={onCancel} className={styles.modalCancelButton}>
             Cancel
           </button>
-          <button onClick={onConfirm} className={styles.modalConfirmButton}>
-            OK
+          <button
+            onClick={onConfirm}
+            className={styles.modalConfirmButton}
+            style={isDanger ? { backgroundColor: "#dc2626", borderColor: "#dc2626" } : {}}
+          >
+            {isDanger ? "Delete" : "OK"}
           </button>
         </div>
       </div>

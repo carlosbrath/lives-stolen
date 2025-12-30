@@ -40,6 +40,13 @@
       "max": 24,
       "step": 6,
       "default": 12
+    },
+    {
+      "type": "textarea",
+      "id": "us_states",
+      "label": "US States (one per line)",
+      "default": "Alabama\nAlaska\nArizona\nArkansas\nCalifornia\nColorado\nConnecticut\nDelaware\nFlorida\nGeorgia\nHawaii\nIdaho\nIllinois\nIndiana\nIowa\nKansas\nKentucky\nLouisiana\nMaine\nMaryland\nMassachusetts\nMichigan\nMinnesota\nMississippi\nMissouri\nMontana\nNebraska\nNevada\nNew Hampshire\nNew Jersey\nNew Mexico\nNew York\nNorth Carolina\nNorth Dakota\nOhio\nOklahoma\nOregon\nPennsylvania\nRhode Island\nSouth Carolina\nSouth Dakota\nTennessee\nTexas\nUtah\nVermont\nVirginia\nWashington\nWest Virginia\nWisconsin\nWyoming",
+      "info": "Enter one state per line. These will be used in both the filter dropdown and submission form."
     }
   ]
 }
@@ -173,30 +180,16 @@
             </svg>
           </button>
           <div class="memorial-filter-options">
+            {% assign states_string = block.settings.us_states | newline_to_br | split: '<br />' %}
+            {% for state in states_string %}
+              {% assign trimmed_state = state | strip %}
+              {% if trimmed_state != blank %}
             <label class="memorial-filter-option">
-              <input type="checkbox" name="state" value="California">
-              <span>California</span>
+              <input type="checkbox" name="state" value="{{ trimmed_state }}">
+              <span>{{ trimmed_state }}</span>
             </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="state" value="New York">
-              <span>New York</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="state" value="Texas">
-              <span>Texas</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="state" value="Washington">
-              <span>Washington</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="state" value="Florida">
-              <span>Florida</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="state" value="Colorado">
-              <span>Colorado</span>
-            </label>
+              {% endif %}
+            {% endfor %}
           </div>
         </div>
 
@@ -311,12 +304,13 @@
             <label for="state">State *</label>
             <select id="state" name="state" required>
               <option value="">Select a state</option>
-              <option value="California">California</option>
-              <option value="New York">New York</option>
-              <option value="Texas">Texas</option>
-              <option value="Washington">Washington</option>
-              <option value="Florida">Florida</option>
-              <option value="Colorado">Colorado</option>
+              {% assign states_string = block.settings.us_states | newline_to_br | split: '<br />' %}
+              {% for state in states_string %}
+                {% assign trimmed_state = state | strip %}
+                {% if trimmed_state != blank %}
+              <option value="{{ trimmed_state }}">{{ trimmed_state }}</option>
+                {% endif %}
+              {% endfor %}
             </select>
           </div>
         </div>
@@ -364,15 +358,36 @@
 
         <div class="memorial-form-group">
           <label for="photo-upload">Photos (optional, max 10)</label>
-          <input
-            type="file"
-            id="photo-upload"
-            name="photos"
-            accept="image/*"
-            multiple
-            max="10"
-          >
-          <span id="file-count" style="display: block; margin-top: 0.5rem; font-size: 0.9em; color: #666;">No files selected</span>
+          <div class="memorial-upload-container">
+            <input
+              type="file"
+              id="photo-upload"
+              name="photos"
+              accept="image/*"
+              multiple
+              class="memorial-file-input"
+            >
+            <div class="memorial-upload-area" id="upload-area">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+              </svg>
+              <p class="memorial-upload-text">Drag & drop photos here or click to browse</p>
+              <p class="memorial-upload-hint">Supports: JPG, PNG, GIF (max 10 images)</p>
+              <p class="memorial-upload-count" id="upload-count">0 / 10 images</p>
+            </div>
+            <div class="memorial-preview-grid" id="preview-grid"></div>
+            <div class="memorial-upload-error" id="upload-error" style="display: none;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <div class="memorial-upload-error-content">
+                <strong>Upload Error</strong>
+                <p id="upload-error-message"></p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="memorial-form-error" id="form-error" style="display: none;"></div>
@@ -401,17 +416,18 @@
     </div>
   </section>
 </div>
+{% assign base_url = 'https://stories-app.fly.dev/' %}
 
 <!-- Load CSS from app -->
-<link rel="stylesheet" href="https://stories-app.fly.dev/assets/memorial-stories.css">
+<link rel="stylesheet" href="{{ base_url }}assets/memorial-stories.css">
 
 <!-- Load JavaScript from app -->
-<script src="https://stories-app.fly.dev/assets/memorial-stories.js" defer></script>
+<script src="{{ base_url }}assets/memorial-stories.js" defer></script>
 
 <script>
   window.MEMORIAL_SETTINGS = {
     initialLoad: {{ block.settings.initial_load }},
-    apiBaseUrl: 'https://stories-app.fly.dev',
+    apiBaseUrl: "{{ base_url }}",
     shop: "{{ shop.permanent_domain }}"
   };
 </script>
