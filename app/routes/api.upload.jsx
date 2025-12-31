@@ -44,11 +44,10 @@ export async function action({ request }) {
       { status: 405, headers: corsHeaders }
     );
   }
-
   try {
     // Rate limiting: 30 uploads per hour per IP
     const rateLimitResponse = rateLimitByIp(request, {
-      maxRequests: 30,
+      maxRequests: 300,
       windowMs: 60 * 60 * 1000, // 1 hour
       message: "Too many upload requests. Please try again later.",
     });
@@ -65,6 +64,8 @@ export async function action({ request }) {
 
     // Extract shop domain
     const shop = formData.get("shop");
+    console.log(`[DEBUG API] Received shop parameter: "${shop}"`);
+
     if (!shop) {
       return json(
         {
@@ -75,7 +76,7 @@ export async function action({ request }) {
         { status: 400, headers: corsHeaders }
       );
     }
-
+    
     // Extract files
     const files = formData.getAll("files");
     if (files.length === 0) {
@@ -88,7 +89,6 @@ export async function action({ request }) {
         { status: 400, headers: corsHeaders }
       );
     }
-
     // Validate file count (max 10)
     if (files.length > 10) {
       return json(
@@ -100,7 +100,6 @@ export async function action({ request }) {
         { status: 400, headers: corsHeaders }
       );
     }
-
     // Validate file types and sizes (basic check before detailed validation)
     for (const file of files) {
       if (!file.type || !file.type.startsWith("image/")) {
@@ -126,12 +125,8 @@ export async function action({ request }) {
         );
       }
     }
-
     // Upload to Shopify Files API
-    console.log(`📤 Uploading ${files.length} files to Shopify for shop: ${shop}`);
     const urls = await uploadFilesToShopify(shop, files);
-
-    console.log(`✅ Successfully uploaded ${urls.length} files to Shopify`);
 
     return json(
       {
@@ -143,9 +138,6 @@ export async function action({ request }) {
     );
 
   } catch (error) {
-    console.error("❌ Upload error:", error);
-    console.error("Error stack:", error.stack);
-
     // Determine error code based on error message
     let errorCode = "UPLOAD_FAILED";
     let statusCode = 500;

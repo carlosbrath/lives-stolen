@@ -14,7 +14,6 @@ class MemorialStoriesAPI {
    * Fetch stories with optional filters
    */
   async fetchStories(filters = {}) {
-    console.log(this.baseUrl);
     try {
       const params = new URLSearchParams();
 
@@ -543,16 +542,12 @@ class StoryWallManager {
 
         // Step 1: Upload images first (if any)
         if (window.imageUploadManager && window.imageUploadManager.selectedFiles.length > 0) {
-          console.log('📤 Uploading images before form submission...');
-
           // Update button text to show upload progress
           if (submitLoading) submitLoading.textContent = 'Uploading images...';
 
           try {
             photoUrls = await window.imageUploadManager.uploadFiles();
-            console.log('✅ Images uploaded successfully');
           } catch (uploadError) {
-            console.error('❌ Image upload failed:', uploadError);
 
             // Show upload error
             const errorMessage = uploadError.message || 'Failed to upload images. Please try again.';
@@ -590,7 +585,6 @@ class StoryWallManager {
         const result = await this.api.submitStory(formData, []); // No files, just URLs
 
         if (result.success) {
-          console.log('✅ Story submitted successfully');
 
           // Show success message
           form.style.display = 'none';
@@ -611,7 +605,6 @@ class StoryWallManager {
         }
 
       } catch (error) {
-        console.error('❌ Submission error:', error);
 
         // Show error
         if (errorDiv) {
@@ -838,14 +831,14 @@ class ImageUploadManager {
 
       // Add shop domain
       const shop = window.MEMORIAL_SETTINGS?.shop || window.Shopify?.shop || 'unknown';
+      console.log('[DEBUG CLIENT] Uploading to shop:', shop);
+      console.log('[DEBUG CLIENT] MEMORIAL_SETTINGS:', window.MEMORIAL_SETTINGS);
       uploadFormData.append('shop', shop);
 
       // Add all files
       this.selectedFiles.forEach(item => {
         uploadFormData.append('files', item.file);
       });
-
-      console.log(`📤 Uploading ${this.selectedFiles.length} images to ${this.apiBaseUrl}api/upload`);
 
       const response = await fetch(`${this.apiBaseUrl}api/upload`, {
         method: 'POST',
@@ -859,14 +852,12 @@ class ImageUploadManager {
       }
 
       this.uploadedUrls = result.urls;
-      console.log('✅ Images uploaded successfully:', this.uploadedUrls);
 
       this.isUploading = false;
       return this.uploadedUrls;
 
     } catch (error) {
       this.isUploading = false;
-      console.error('❌ Upload failed:', error);
       throw error;
     }
   }

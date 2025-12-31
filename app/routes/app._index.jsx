@@ -28,11 +28,13 @@ export const loader = async ({ request }) => {
 
 export default function Index() {
   const setupFetcher = useFetcher();
+  const refreshFetcher = useFetcher();
   const shopify = useAppBridge();
   const navigate = useNavigate();
   const [setupComplete, setSetupComplete] = useState(false);
 
   const isSettingUp = setupFetcher.state === "submitting" || setupFetcher.state === "loading";
+  const isRefreshing = refreshFetcher.state === "submitting" || refreshFetcher.state === "loading";
 
   useEffect(() => {
     if (setupFetcher.data?.success) {
@@ -47,11 +49,27 @@ export default function Index() {
     }
   }, [setupFetcher.data, shopify]);
 
+  useEffect(() => {
+    if (refreshFetcher.state === "loading") {
+      shopify.toast.show("Refreshing app permissions...");
+    }
+  }, [refreshFetcher.state, shopify]);
+
   const runSetup = () => {
     setupFetcher.submit({}, {
       method: "POST",
       action: "/app/setup-metaobject",
     });
+  };
+
+  const refreshPermissions = () => {
+    const shop = window.shopify?.config?.shop;
+    if (shop) {
+      // Navigate to refresh-scopes route which will delete old sessions and trigger OAuth
+      window.location.href = `/api/refresh-scopes?shop=${shop}`;
+    } else {
+      shopify.toast.show("Unable to detect shop domain", { isError: true });
+    }
   };
 
   const goToSubmissions = () => {
@@ -75,7 +93,7 @@ export default function Index() {
           <Layout.Section>
             <BlockStack gap="400">
               <Text as="h2" variant="headingLg">
-                Quick Actionssss
+                Quick Actions
               </Text>
               <Layout>
                 <Layout.Section variant="oneHalf">
@@ -147,7 +165,34 @@ export default function Index() {
                   </Card>
                 </Layout.Section>
 
-                
+                <Layout.Section variant="oneHalf">
+                  <Card>
+                    <BlockStack gap="400">
+                      <InlineStack align="space-between" blockAlign="center">
+                        <InlineStack gap="300" blockAlign="center">
+                          <Icon source={SettingsIcon} tone="base" />
+                          <Text as="h3" variant="headingMd">
+                            Refresh App Permissions
+                          </Text>
+                        </InlineStack>
+                      </InlineStack>
+                      <Text as="p" variant="bodyMd" tone="subdued">
+                        If image uploads fail, refresh app permissions to get updated access token with new scopes.
+                      </Text>
+                      <InlineStack gap="200">
+                        <Button
+                          onClick={refreshPermissions}
+                          tone="critical"
+                          loading={isRefreshing}
+                        >
+                          Refresh Permissions
+                        </Button>
+                      </InlineStack>
+                    </BlockStack>
+                  </Card>
+                </Layout.Section>
+
+
               </Layout>
             </BlockStack>
           </Layout.Section>

@@ -37,64 +37,73 @@ export function normalizeShopDomain(shop) {
 }
 
 /**
- * Load session for a shop
+ * Load session for a shop - tries multiple methods
  * @param {string} shop - Shop domain
  * @returns {Promise<Session|null>} Session object or null
  */
 export async function loadShopSession(shop) {
   try {
     const normalizedShop = normalizeShopDomain(shop);
-    console.log(`🔍 Loading session for shop: ${shop} -> normalized: ${normalizedShop}`);
+    console.log(`[DEBUG] Loading session for: ${shop} -> normalized: ${normalizedShop}`);
 
-    // Try loading offline session first (more stable for public operations)
+    // Strategy 1: Try offline session with format: offline_shop.myshopify.com
     const offlineSessionId = `offline_${normalizedShop}`;
+    console.log(`[DEBUG] Trying offline session ID: ${offlineSessionId}`);
     let session = await sessionStorage.loadSession(offlineSessionId);
 
-    if (session && session.accessToken) {
-      console.log(`✓ Loaded offline session for ${normalizedShop}`);
-      console.log(`  - Session ID: ${session.id}`);
-      console.log(`  - Access token present: ${!!session.accessToken}`);
-      console.log(`  - Access token (masked): ${session.accessToken ? session.accessToken.substring(0, 10) + '...' : 'NONE'}`);
-      console.log(`  - Shop: ${session.shop}`);
-      console.log(`  - Scope: ${session.scope || 'NOT SET'}`);
+    if (session?.accessToken) {
+      console.log(`[DEBUG] ✅ Found offline session with access token`);
+      console.log(`[DEBUG] Access token: ${session.accessToken.substring(0, 15)}...`);
+      console.log(`[DEBUG] Scopes: ${session.scope || 'NOT SET'}`);
+      console.log(`[DEBUG] Shop: ${session.shop}`);
+      console.log(`[DEBUG] Is online: ${session.isOnline}`);
       return session;
-    } else {
-      console.warn(`⚠ Offline session not found or missing access token for ${offlineSessionId}`);
     }
 
-    // Fallback: try finding any session for this shop in database
-    console.log(`🔍 Searching database for session with shop: ${normalizedShop}`);
-    const sessionRecord = await prisma.session.findFirst({
-      where: { shop: normalizedShop },
+    console.log(`[DEBUG] ❌ Offline session not found, trying database...`);
+
+    // Strategy 2: Search database directly for ANY session matching this shop
+    const sessionRecords = await prisma.session.findMany({
+      where: {
+        OR: [
+          { shop: normalizedShop },
+          { id: { startsWith: normalizedShop } },
+          { id: { startsWith: `offline_${normalizedShop}` } }
+        ]
+      },
       orderBy: { id: 'desc' }
     });
 
-    if (sessionRecord) {
-      console.log(`✓ Found session in database for ${normalizedShop}`);
-      console.log(`  - Session record ID: ${sessionRecord.id}`);
-      console.log(`  - Session shop: ${sessionRecord.shop}`);
-      // Parse the session JSON
-      const parsedSession = JSON.parse(sessionRecord.content);
-      console.log(`  - Parsed session ID: ${parsedSession.id}`);
-      console.log(`  - Access token present: ${!!parsedSession.accessToken}`);
-      console.log(`  - Access token (masked): ${parsedSession.accessToken ? parsedSession.accessToken.substring(0, 10) + '...' : 'NONE'}`);
-      console.log(`  - Scope: ${parsedSession.scope || 'NOT SET'}`);
-      return parsedSession;
+    console.log(`[DEBUG] Found ${sessionRecords.length} session records in database`);
+    sessionRecords.forEach(r => console.log(`  - ID: ${r.id}, Shop: ${r.shop}`));
+
+    // Try each session record until we find one with valid access token
+    for (const record of sessionRecords) {
+      try {
+        const parsedSession = JSON.parse(record.content);
+        if (parsedSession?.accessToken) {
+          console.log(`[DEBUG] ✅ Found valid session in database: ${record.id}`);
+          return parsedSession;
+        }
+      } catch (e) {
+        console.log(`[DEBUG] ⚠️ Failed to parse session: ${record.id}`);
+        continue;
+      }
     }
 
-    console.error(`❌ No session found for ${normalizedShop}`);
-    console.log(`🔍 Checking all sessions in database...`);
+    // Last resort: Get ALL sessions and see what we have
+    console.log(`[DEBUG] No matching sessions found. Checking ALL sessions...`);
     const allSessions = await prisma.session.findMany({
-      select: { id: true, shop: true }
+      select: { id: true, shop: true },
+      take: 10
     });
-    console.log(`  - Total sessions in database: ${allSessions.length}`);
-    allSessions.forEach(s => console.log(`    - ${s.shop} (ID: ${s.id})`));
+    console.log(`[DEBUG] Total sessions in DB: ${allSessions.length}`);
+    allSessions.forEach(s => console.log(`  - ID: ${s.id}, Shop: ${s.shop}`));
 
     return null;
   } catch (error) {
-    console.error(`❌ Error loading session for ${shop}:`, error);
-    console.error(`Error stack:`, error.stack);
-    return null;
+    console.error(`[DEBUG] ❌ Session loading error:`, error);
+    throw new Error(`Session loading failed: ${error.message}`);
   }
 }
 
@@ -109,23 +118,48 @@ export async function validateShopAccess(shop) {
   }
 
   const normalizedShop = normalizeShopDomain(shop);
-  const session = await loadShopSession(normalizedShop);
 
-  if (!session) {
+  try {
+    const session = await loadShopSession(normalizedShop);
+
+    if (!session) {
+      // Check if shop exists in database at all
+      const shopExists = await prisma.session.findFirst({
+        where: {
+          OR: [
+            { shop: normalizedShop },
+            { id: { contains: normalizedShop } }
+          ]
+        }
+      });
+
+      if (!shopExists) {
+        return {
+          valid: false,
+          error: `App not installed on ${normalizedShop}. Please install the app first.`
+        };
+      }
+
+      return {
+        valid: false,
+        error: `No active session found for ${normalizedShop}. Please reinstall the app.`
+      };
+    }
+
+    if (!session.accessToken) {
+      return {
+        valid: false,
+        error: 'Session expired. Please reinstall the app.'
+      };
+    }
+
+    return { valid: true, session };
+  } catch (error) {
     return {
       valid: false,
-      error: `Shop ${normalizedShop} not found or app not installed`
+      error: `Session validation failed: ${error.message}`
     };
   }
-
-  if (!session.accessToken) {
-    return {
-      valid: false,
-      error: 'Shop session has expired. Please reinstall the app.'
-    };
-  }
-
-  return { valid: true, session };
 }
 
 /**
@@ -215,7 +249,6 @@ export async function prepareFileForUpload(file, index) {
  * @throws {Error} If shop validation fails or upload fails
  */
 export async function uploadFilesToShopify(shop, files) {
-  console.log('testing shop')
   // Validate shop access
   const { valid, error, session } = await validateShopAccess(shop);
   if (!valid) {
@@ -246,6 +279,5 @@ export async function uploadFilesToShopify(shop, files) {
     throw new Error('Upload failed: No URLs returned from Shopify');
   }
 
-  console.log(`✓ Uploaded ${cdnUrls.length} files to Shopify for ${normalizedShop}`);
   return cdnUrls;
 }

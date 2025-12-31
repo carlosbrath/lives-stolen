@@ -9,15 +9,17 @@ ENV NODE_ENV=production
 
 COPY package.json package-lock.json* ./
 
-RUN npm ci --omit=dev && npm cache clean --force
-# Remove CLI packages since we don't need them in production by default.
-# Remove this line if you want to run CLI commands in your container.
-RUN npm remove @shopify/cli
+# Install ALL dependencies (including dev) for the build process
+RUN npm ci && npm cache clean --force
 
 COPY . .
 
 # Build without migrations (DATABASE_URL not available during build)
 # Migrations will run at startup via docker-start script
 RUN DATABASE_URL="postgresql://placeholder" SHOPIFY_APP_URL="https://stories-app.fly.dev" npm run build:docker
+
+# Now remove dev dependencies and CLI packages to reduce image size
+RUN npm prune --omit=dev
+RUN npm remove @shopify/cli || true
 
 CMD ["npm", "run", "docker-start"]

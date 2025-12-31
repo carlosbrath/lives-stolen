@@ -41,7 +41,7 @@ export async function createBlogPostInShopify(
   };
 
   try {
-    const response = await fetch(`https://${shop}/admin/api/2025-01/graphql.json`, {
+    const response = await fetch(`https://${shop}/admin/api/2025-10/graphql.json`, {
       method: "POST",
       headers: {
         "X-Shopify-Access-Token": accessToken,
@@ -71,7 +71,7 @@ export async function createBlogPostInShopify(
 
 /**
  * Get the session for a specific store
- * Tries offline session first, then falls back to database lookup
+ * Tries multiple strategies to find a valid session
  */
 export async function getStoreSession(shop) {
   try {
@@ -81,30 +81,43 @@ export async function getStoreSession(shop) {
       normalizedShop = `${shop}.myshopify.com`;
     }
 
-    // Try loading offline session first (more stable for background operations)
+    // Strategy 1: Try loading offline session (most stable for background operations)
     const offlineSessionId = `offline_${normalizedShop}`;
     let session = await sessionStorage.loadSession(offlineSessionId);
 
-    if (session && session.accessToken) {
+    if (session?.accessToken) {
       return session;
     }
 
-    // Fallback: try finding any session for this shop in database
-    const sessionRecord = await prisma.session.findFirst({
-      where: { shop: normalizedShop },
+    // Strategy 2: Search database for ANY session matching this shop
+    const sessionRecords = await prisma.session.findMany({
+      where: {
+        OR: [
+          { shop: normalizedShop },
+          { id: { startsWith: normalizedShop } },
+          { id: { startsWith: `offline_${normalizedShop}` } }
+        ]
+      },
       orderBy: { id: 'desc' }
     });
 
-    if (sessionRecord && sessionRecord.content) {
-      // Parse the session JSON
-      const parsedSession = JSON.parse(sessionRecord.content);
-      return parsedSession;
+    // Try each session until we find one with valid access token
+    for (const record of sessionRecords) {
+      try {
+        if (record.content) {
+          const parsedSession = JSON.parse(record.content);
+          if (parsedSession?.accessToken) {
+            return parsedSession;
+          }
+        }
+      } catch (e) {
+        continue;
+      }
     }
 
     return null;
   } catch (error) {
-    console.error("Error loading session:", error);
-    return null;
+    throw new Error(`Session loading failed: ${error.message}`);
   }
 }
 
@@ -145,10 +158,8 @@ async function pollForFileUrl(shop, accessToken, fileId, maxAttempts = 10) {
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      console.log(`🔄 Polling attempt ${attempt}/${maxAttempts} for file URL...`);
-
       const response = await fetch(
-        `https://${shop}/admin/api/2025-01/graphql.json`,
+        `https://${shop}/admin/api/2025-10/graphql.json`,
         {
           method: "POST",
           headers: {
@@ -165,21 +176,18 @@ async function pollForFileUrl(shop, accessToken, fileId, maxAttempts = 10) {
       const result = await response.json();
 
       if (result.data?.node?.image?.url) {
-        console.log(`✅ File URL retrieved: ${result.data.node.image.url}`);
         return result.data.node.image.url;
       }
 
       // Wait before next attempt (exponential backoff)
       const waitTime = Math.min(1000 * Math.pow(1.5, attempt - 1), 5000);
-      console.log(`⏳ URL not ready, waiting ${waitTime}ms...`);
       await new Promise(resolve => setTimeout(resolve, waitTime));
 
     } catch (error) {
-      console.error(`Error polling for file URL (attempt ${attempt}):`, error);
+      // Continue to next attempt
     }
   }
 
-  console.error(`❌ Failed to get file URL after ${maxAttempts} attempts`);
   return null;
 }
 
@@ -202,8 +210,6 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
 
   for (const file of files) {
     try {
-      console.log(`📤 Uploading file: ${file.filename} (${file.mimeType})`);
-
       // Step 1: Generate staged upload URL
       const stagedUploadQuery = `
         mutation stagedUploadsCreate($input: [StagedUploadInput!]!) {
@@ -235,13 +241,11 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
         ],
       };
 
-      console.log(`🔐 Making staged upload request to shop: ${shop}`);
-      console.log(`  - URL: https://${shop}/admin/api/2025-01/graphql.json`);
-      console.log(`  - Access token (masked): ${accessToken ? accessToken.substring(0, 10) + '...' : 'MISSING!'}`);
-      console.log(`  - Access token length: ${accessToken ? accessToken.length : 0}`);
+      console.log(`[DEBUG SHOPIFY] Making request to: https://${shop}/admin/api/2025-10/graphql.json`);
+      console.log(`[DEBUG SHOPIFY] Access token: ${accessToken ? accessToken.substring(0, 15) + '...' : 'MISSING'}`);
 
       const stagedResponse = await fetch(
-        `https://${shop}/admin/api/2025-01/graphql.json`,
+        `https://${shop}/admin/api/2025-10/graphql.json`,
         {
           method: "POST",
           headers: {
@@ -255,23 +259,18 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
         }
       );
 
-      console.log(`📡 Staged upload response status: ${stagedResponse.status} ${stagedResponse.statusText}`);
-
+      console.log(`[DEBUG SHOPIFY] Response status: ${stagedResponse.status}`);
       const stagedResult = await stagedResponse.json();
-      console.log(`📋 Staged upload result:`, JSON.stringify(stagedResult, null, 2));
+      console.log(`[DEBUG SHOPIFY] Response:`, JSON.stringify(stagedResult, null, 2));
 
       if (stagedResult.errors) {
-        const errorMsg = `Staged upload GraphQL error: ${JSON.stringify(stagedResult.errors)}`;
-        console.error(errorMsg);
-        console.error(`  - This usually means the access token is invalid, expired, or doesn't have the required scopes`);
-        console.error(`  - Check that the app has 'write_files' scope and is properly installed on the shop`);
+        const errorMsg = `Shopify API error: ${stagedResult.errors[0]?.message || 'Invalid API key or access token'}`;
         errors.push(errorMsg);
         continue;
       }
 
       if (stagedResult.data?.stagedUploadsCreate?.userErrors?.length > 0) {
-        const errorMsg = `Staged upload user error: ${JSON.stringify(stagedResult.data.stagedUploadsCreate.userErrors)}`;
-        console.error(errorMsg);
+        const errorMsg = `Upload error: ${stagedResult.data.stagedUploadsCreate.userErrors[0]?.message}`;
         errors.push(errorMsg);
         continue;
       }
@@ -287,20 +286,18 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
       });
 
       // Add the actual file data
-      // If file.data is a Buffer, Blob, or File
       if (file.data instanceof Blob || file.data instanceof File) {
         formData.append("file", file.data, file.filename);
       } else if (Buffer.isBuffer(file.data)) {
         const blob = new Blob([file.data], { type: file.mimeType });
         formData.append("file", blob, file.filename);
       } else if (typeof file.data === "string" && file.data.startsWith("data:")) {
-        // Handle base64 data URL
         const base64Data = file.data.split(",")[1];
         const buffer = Buffer.from(base64Data, "base64");
         const blob = new Blob([buffer], { type: file.mimeType });
         formData.append("file", blob, file.filename);
       } else {
-        console.error("Unsupported file data format");
+        errors.push("Unsupported file data format");
         continue;
       }
 
@@ -310,14 +307,10 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
       });
 
       if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        const errorMsg = `File upload to staged URL failed (${uploadResponse.status}): ${errorText}`;
-        console.error(errorMsg);
+        const errorMsg = `File upload failed with status ${uploadResponse.status}`;
         errors.push(errorMsg);
         continue;
       }
-
-      console.log(`✅ File uploaded to staged URL`);
 
       // Step 3: Create file record in Shopify
       const fileCreateQuery = `
@@ -359,7 +352,7 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
       };
 
       const fileCreateResponse = await fetch(
-        `https://${shop}/admin/api/2025-01/graphql.json`,
+        `https://${shop}/admin/api/2025-10/graphql.json`,
         {
           method: "POST",
           headers: {
@@ -376,24 +369,18 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
       const fileCreateResult = await fileCreateResponse.json();
 
       if (fileCreateResult.errors) {
-        const errorMsg = `File create GraphQL error: ${JSON.stringify(fileCreateResult.errors)}`;
-        console.error(errorMsg);
+        const errorMsg = `File create error: ${fileCreateResult.errors[0]?.message || 'Unknown error'}`;
         errors.push(errorMsg);
         continue;
       }
 
       if (fileCreateResult.data?.fileCreate?.userErrors?.length > 0) {
-        const errorMsg = `File create user error: ${JSON.stringify(fileCreateResult.data.fileCreate.userErrors)}`;
-        console.error(errorMsg);
+        const errorMsg = `File create error: ${fileCreateResult.data.fileCreate.userErrors[0]?.message}`;
         errors.push(errorMsg);
         continue;
       }
 
       const createdFile = fileCreateResult.data.fileCreate.files[0];
-
-      // Debug: log the entire response to see structure
-      console.log('📋 File create response:', JSON.stringify(fileCreateResult.data.fileCreate, null, 2));
-      console.log('📋 Created file object:', JSON.stringify(createdFile, null, 2));
 
       // Extract URL based on file type
       let fileUrl = null;
@@ -406,21 +393,17 @@ export async function uploadImagesToShopify(shop, accessToken, files) {
         fileUrl = createdFile.image.url;
       } else if (createdFile.__typename === 'MediaImage' && createdFile.id) {
         // MediaImage created but URL not ready yet - poll for it
-        console.log(`⏳ MediaImage created, polling for URL...`);
         fileUrl = await pollForFileUrl(shop, accessToken, createdFile.id);
       }
 
       if (fileUrl) {
-        console.log(`✅ File created in Shopify: ${fileUrl}`);
         uploadedUrls.push(fileUrl);
       } else {
-        const errorMsg = `File created but no URL returned after polling. File object: ${JSON.stringify(createdFile)}`;
-        console.error(errorMsg);
+        const errorMsg = `File uploaded but URL not available`;
         errors.push(errorMsg);
       }
     } catch (error) {
-      const errorMsg = `Unexpected error uploading ${file.filename}: ${error.message}`;
-      console.error(errorMsg, error);
+      const errorMsg = `Error uploading ${file.filename}: ${error.message}`;
       errors.push(errorMsg);
     }
   }
@@ -446,24 +429,20 @@ export async function uploadImagesForPublicSubmission(shop, files) {
   }
 
   try {
-    // Load session for the shop
     const session = await getStoreSession(shop);
 
     if (!session || !session.accessToken) {
       throw new Error(`No active session found for shop: ${shop}. App may not be installed.`);
     }
 
-    // Normalize shop domain
     let normalizedShop = shop;
     if (!shop.includes('.myshopify.com') && !shop.includes('.')) {
       normalizedShop = `${shop}.myshopify.com`;
     }
 
-    // Call existing uploadImagesToShopify with shop and token
     return await uploadImagesToShopify(normalizedShop, session.accessToken, files);
 
   } catch (error) {
-    console.error("Error uploading images for public submission:", error);
     throw new Error(`Failed to upload images: ${error.message}`);
   }
 }
