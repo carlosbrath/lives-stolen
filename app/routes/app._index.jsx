@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useFetcher, useNavigate } from "@remix-run/react";
+import { useFetcher, useNavigate, useLoaderData } from "@remix-run/react";
+import { redirect, json } from "@remix-run/node";
 import {
   Page,
   Layout,
@@ -22,11 +23,25 @@ import {
 } from "@shopify/polaris-icons";
 
 export const loader = async ({ request }) => {
-  await authenticate.admin(request);
+  const { session } = await authenticate.admin(request);
+  return { shop: session.shop };
+};
+
+export const action = async ({ request }) => {
+  const { session } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const intent = formData.get("intent");
+
+  if (intent === "refresh-permissions") {
+    // Redirect to refresh-scopes endpoint
+    return redirect(`/api/refresh-scopes?shop=${session.shop}`);
+  }
+
   return null;
 };
 
 export default function Index() {
+  const { shop } = useLoaderData();
   const setupFetcher = useFetcher();
   const refreshFetcher = useFetcher();
   const shopify = useAppBridge();
@@ -63,13 +78,11 @@ export default function Index() {
   };
 
   const refreshPermissions = () => {
-    const shop = window.shopify?.config?.shop;
-    if (shop) {
-      // Navigate to refresh-scopes route which will delete old sessions and trigger OAuth
-      window.location.href = `/api/refresh-scopes?shop=${shop}`;
-    } else {
-      shopify.toast.show("Unable to detect shop domain", { isError: true });
-    }
+    // Use fetcher to submit action that will redirect to refresh-scopes
+    refreshFetcher.submit(
+      { intent: "refresh-permissions" },
+      { method: "POST" }
+    );
   };
 
   const goToSubmissions = () => {
