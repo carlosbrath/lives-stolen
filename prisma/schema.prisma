@@ -50,12 +50,14 @@ model Submission {
   // Incident info
   incidentDate          String
   state                 String
+  zipCode               String?
   roadUserType          String
   injuryType            String
 
   // Story content
   shortTitle            String
   victimStory           String
+  interestedInContact   Boolean?
 
   // Files & media
   photoUrls             String?   // JSON array of photo URLs

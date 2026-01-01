@@ -15,9 +15,17 @@ const US_STATES = [
 
 const ROAD_USER_TYPES = ["Cyclist", "Pedestrian", "Motorcyclist"];
 
-const INJURY_TYPES = ["Fatal", "Non-fatal"];
+const INJURY_TYPES = [
+  { value: "Fatal", label: "Fatal" },
+  { value: "Non-fatal", label: "Non-fatal" },
+  { value: "Not-hit", label: "Not hit, but deeply impacted" }
+];
 
-const GENDERS = ["Male", "Female", "Non-binary", "Other", "Prefer not to say"];
+const GENDERS = [
+  { value: "Male", label: "Male" },
+  { value: "Female", label: "Female" },
+  { value: "Other", label: "Other" }
+];
 
 function FormInput({ label, name, type = "text", placeholder, required, value, onChange, error, maxLength }) {
   return (
@@ -64,6 +72,34 @@ function FormSelect({ label, name, options, required, value, onChange, error, pl
           </option>
         ))}
       </select>
+      {error && <p className={styles.errorMessage}>{error}</p>}
+    </div>
+  );
+}
+
+function FormRadioGroup({ label, name, options, required, value, onChange, error }) {
+  return (
+    <div className={styles.formGroup}>
+      <label className={styles.formLabel}>
+        {label}
+        {required && <span className={styles.required}> *</span>}
+      </label>
+      <div className={styles.radioGroup}>
+        {options.map((option) => (
+          <label key={option.value} className={styles.radioLabel}>
+            <input
+              type="radio"
+              name={name}
+              value={option.value}
+              checked={value === option.value}
+              onChange={onChange}
+              className={styles.radioInput}
+              required={required}
+            />
+            <span className={styles.radioText}>{option.label}</span>
+          </label>
+        ))}
+      </div>
       {error && <p className={styles.errorMessage}>{error}</p>}
     </div>
   );
@@ -224,6 +260,7 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
     victimName: "",
     relation: "",
     incidentDate: "",
+    zipCode: "",
     state: "",
     roadUserType: "",
     injuryType: "",
@@ -231,6 +268,7 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
     gender: "",
     victimStory: "",
     photos: [],
+    interestedInContact: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -369,7 +407,7 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
         )}
 
         <div className={styles.formContainer}>
-          {/* Submitter Information */}
+          {/* Row 1-4: Full width fields */}
           <FormInput
             label="Submitter Name"
             name="submitterName"
@@ -391,7 +429,6 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
             error={errors.submitterEmail}
           />
 
-          {/* Victim Information */}
           <FormInput
             label="Victim Name"
             name="victimName"
@@ -410,71 +447,86 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
             error={errors.relation}
           />
 
-          {/* Incident Details */}
-          <FormInput
-            label="Incident Date"
-            name="incidentDate"
-            type="date"
-            required
-            value={formData.incidentDate}
-            onChange={handleInputChange}
-            error={errors.incidentDate}
-          />
+          {/* Row 5: Three columns - Incident Date | Zip Code | State */}
+          <div className={styles.formRow3Cols}>
+            <FormInput
+              label="Incident Date"
+              name="incidentDate"
+              type="date"
+              required
+              value={formData.incidentDate}
+              onChange={handleInputChange}
+              error={errors.incidentDate}
+            />
 
-          <FormSelect
-            label="State"
-            name="state"
-            options={US_STATES}
-            placeholder="Select state"
-            required
-            value={formData.state}
-            onChange={handleInputChange}
-            error={errors.state}
-          />
+            <FormInput
+              label="Zip Code"
+              name="zipCode"
+              placeholder="Zip code"
+              value={formData.zipCode}
+              onChange={handleInputChange}
+              error={errors.zipCode}
+            />
 
-          <FormSelect
-            label="Road User Type"
-            name="roadUserType"
-            options={ROAD_USER_TYPES}
-            placeholder="Select road user type"
-            required
-            value={formData.roadUserType}
-            onChange={handleInputChange}
-            error={errors.roadUserType}
-          />
+            <FormSelect
+              label="State"
+              name="state"
+              options={US_STATES}
+              placeholder="Select state"
+              required
+              value={formData.state}
+              onChange={handleInputChange}
+              error={errors.state}
+            />
+          </div>
 
-          <FormSelect
-            label="Injury Type"
-            name="injuryType"
-            options={INJURY_TYPES}
-            placeholder="Select injury type"
-            required
-            value={formData.injuryType}
-            onChange={handleInputChange}
-            error={errors.injuryType}
-          />
+          {/* Row 6: Two columns - Road User Type | Injury Type (Radio) */}
+          <div className={styles.formRow2Cols}>
+            <FormSelect
+              label="Road User Type"
+              name="roadUserType"
+              options={ROAD_USER_TYPES}
+              placeholder="Select road user type"
+              required
+              value={formData.roadUserType}
+              onChange={handleInputChange}
+              error={errors.roadUserType}
+            />
 
-          <FormInput
-            label="Age at Incident"
-            name="age"
-            type="number"
-            placeholder="Age (optional)"
-            value={formData.age}
-            onChange={handleInputChange}
-            error={errors.age}
-          />
+            <FormRadioGroup
+              label="Injury Type"
+              name="injuryType"
+              options={INJURY_TYPES}
+              required
+              value={formData.injuryType}
+              onChange={handleInputChange}
+              error={errors.injuryType}
+            />
+          </div>
 
-          <FormSelect
-            label="Gender"
-            name="gender"
-            options={GENDERS}
-            placeholder="Select gender (optional)"
-            value={formData.gender}
-            onChange={handleInputChange}
-            error={errors.gender}
-          />
+          {/* Row 7: Two columns - Age | Gender */}
+          <div className={styles.formRow2Cols}>
+            <FormInput
+              label="Age at Incident"
+              name="age"
+              type="number"
+              placeholder="Age (optional)"
+              value={formData.age}
+              onChange={handleInputChange}
+              error={errors.age}
+            />
 
-          {/* Story Details */}
+            <FormRadioGroup
+              label="Gender"
+              name="gender"
+              options={GENDERS}
+              value={formData.gender}
+              onChange={handleInputChange}
+              error={errors.gender}
+            />
+          </div>
+
+          {/* Story Details - Full width */}
           <FormTextarea
             label="Victim's Story"
             name="victimStory"
@@ -486,7 +538,7 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
             error={errors.victimStory}
           />
 
-          {/* Photo Upload */}
+          {/* Photo Upload - Full width */}
           <ImageUpload
             label="Photos"
             name="photos"
@@ -496,25 +548,47 @@ export default function StorySubmissionForm({ onSubmit, isSubmitting, actionData
             maxImages={10}
           />
 
-          <button
-            type="submit"
-            className={styles.submitButton}
-            disabled={isSubmitting || isUploading}
-          >
-            {isUploading ? (
-              <>
-                <span className={styles.spinner}></span>
-                Uploading images...
-              </>
-            ) : isSubmitting ? (
-              <>
-                <span className={styles.spinner}></span>
-                Submitting...
-              </>
-            ) : (
-              "Submit Story"
-            )}
-          </button>
+          {/* Contact Preference - Radio buttons */}
+          <FormRadioGroup
+            label="Interested in being contacted about your story?"
+            name="interestedInContact"
+            options={[
+              { value: "yes", label: "Yes" },
+              { value: "no", label: "No" }
+            ]}
+            value={formData.interestedInContact}
+            onChange={handleInputChange}
+            error={errors.interestedInContact}
+          />
+
+          <div className={styles.buttonGroup}>
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={isSubmitting || isUploading}
+            >
+              {isUploading ? (
+                <>
+                  <span className={styles.spinner}></span>
+                  Uploading images...
+                </>
+              ) : isSubmitting ? (
+                <>
+                  <span className={styles.spinner}></span>
+                  Submitting...
+                </>
+              ) : (
+                "Submit"
+              )}
+            </button>
+
+            <a
+              href="mailto:contact@example.com"
+              className={styles.emailButton}
+            >
+              Email Us
+            </a>
+          </div>
         </div>
       </Form>
     </div>

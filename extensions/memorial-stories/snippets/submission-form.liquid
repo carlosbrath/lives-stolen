@@ -1,0 +1,204 @@
+{% comment %}
+  Submission Form Component
+  Reusable story submission form
+
+  Parameters:
+  - us_states: List of states (from settings)
+  - form_id: ID for the form (default: 'memorial-submission-form')
+{% endcomment %}
+
+{% assign form_id = form_id | default: 'memorial-submission-form' %}
+
+<form id="{{ form_id }}" class="memorial-form" method="post" onsubmit="return false;">
+  <!-- Submitter Info -->
+  <div class="memorial-form-row">
+    <div class="memorial-form-group">
+      <label for="submitterName">Submitter Name *</label>
+      <input type="text" id="submitterName" name="submitterName" required>
+    </div>
+  </div>
+
+  <div class="memorial-form-row">
+    <div class="memorial-form-group">
+      <label for="submitterEmail">Submitter Email *</label>
+      <input type="email" id="submitterEmail" name="submitterEmail" required>
+    </div>
+  </div>
+
+  <!-- Victim Info -->
+  <div class="memorial-form-row">
+    <div class="memorial-form-group">
+      <label for="victimName">Victim Name</label>
+      <input type="text" id="victimName" name="victimName">
+    </div>
+  </div>
+
+  <div class="memorial-form-row">
+    <div class="memorial-form-group">
+      <label for="relation">Relation</label>
+      <input type="text" id="relation" name="relation">
+    </div>
+  </div>
+
+  <!-- Incident Details: Date | Zip | State -->
+  <div class="memorial-form-row memorial-form-row-3cols">
+    <div class="memorial-form-group">
+      <label for="incidentDate">Incident Date *</label>
+      <input type="date" id="incidentDate" name="incidentDate" required>
+    </div>
+    <div class="memorial-form-group">
+      <label for="zipCode">Zip Code</label>
+      <input type="text" id="zipCode" name="zipCode" placeholder="Zip code">
+    </div>
+    <div class="memorial-form-group">
+      <label for="state">State *</label>
+      <input
+        type="text"
+        id="state"
+        name="state"
+        list="states-list"
+        placeholder="Type to search state..."
+        autocomplete="off"
+        required
+      >
+      <datalist id="states-list">
+        {% assign states_string = us_states | newline_to_br | split: '<br />' %}
+        {% for state in states_string %}
+          {% assign trimmed_state = state | strip %}
+          {% if trimmed_state != blank %}
+            <option value="{{ trimmed_state }}">
+          {% endif %}
+        {% endfor %}
+      </datalist>
+    </div>
+  </div>
+
+  <!-- Road User Type | Injury Type -->
+  <div class="memorial-form-row memorial-form-row-2cols">
+    <div class="memorial-form-group">
+      <label for="roadUserType">Road User Type *</label>
+      <select id="roadUserType" name="roadUserType" required>
+        <option value="">Select type</option>
+        <option value="Cyclist">Cyclist</option>
+        <option value="Pedestrian">Pedestrian</option>
+        <option value="Motorcyclist">Motorcyclist</option>
+      </select>
+    </div>
+    <div class="memorial-form-group">
+      <label>Injury Type *</label>
+      <div class="memorial-radio-group">
+        <label class="memorial-radio-label">
+          <input type="radio" name="injuryType" value="Fatal" required>
+          <span>Fatal</span>
+        </label>
+        <label class="memorial-radio-label">
+          <input type="radio" name="injuryType" value="Non-fatal" required>
+          <span>Non-fatal</span>
+        </label>
+        <label class="memorial-radio-label">
+          <input type="radio" name="injuryType" value="Not-hit" required>
+          <span>Not hit, but deeply impacted</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Age | Gender -->
+  <div class="memorial-form-row memorial-form-row-2cols">
+    <div class="memorial-form-group">
+      <label for="age">Age at Incident</label>
+      <input type="number" id="age" name="age" min="0" max="120">
+    </div>
+    <div class="memorial-form-group">
+      <label>Gender</label>
+      <div class="memorial-radio-group">
+        <label class="memorial-radio-label">
+          <input type="radio" name="gender" value="Male">
+          <span>Male</span>
+        </label>
+        <label class="memorial-radio-label">
+          <input type="radio" name="gender" value="Female">
+          <span>Female</span>
+        </label>
+        <label class="memorial-radio-label">
+          <input type="radio" name="gender" value="Other">
+          <span>Other</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Story -->
+  <div class="memorial-form-group">
+    <label for="victimStory">Tell Their Story *</label>
+    <textarea
+      id="victimStory"
+      name="victimStory"
+      rows="8"
+      required
+      placeholder="Share the story of your loved one..."
+    ></textarea>
+  </div>
+
+  <!-- Photo Upload -->
+  <div class="memorial-form-group">
+    <label for="photo-upload">Photos (optional, max 10)</label>
+    <div class="memorial-upload-container">
+      <input
+        type="file"
+        id="photo-upload"
+        name="photos"
+        accept="image/*"
+        multiple
+        class="memorial-file-input"
+      >
+      <div class="memorial-upload-area" id="upload-area">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+        </svg>
+        <p class="memorial-upload-text">Drag & drop photos here or click to browse</p>
+        <p class="memorial-upload-hint">Supports: JPG, PNG, GIF (max 10 images)</p>
+        <p class="memorial-upload-count" id="upload-count">0 / 10 images</p>
+      </div>
+      <div class="memorial-preview-grid" id="preview-grid"></div>
+      <div class="memorial-upload-error" id="upload-error" style="display: none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <div class="memorial-upload-error-content">
+          <strong>Upload Error</strong>
+          <p id="upload-error-message"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Preference -->
+  <div class="memorial-form-group">
+    <label>Interested in being contacted about your story?</label>
+    <div class="memorial-radio-group">
+      <label class="memorial-radio-label">
+        <input type="radio" name="interestedInContact" value="yes">
+        <span>Yes, contact me</span>
+      </label>
+      <label class="memorial-radio-label">
+        <input type="radio" name="interestedInContact" value="no">
+        <span>No</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Error Display -->
+  <div class="memorial-form-error" id="form-error" style="display: none;"></div>
+
+  <!-- Submit Buttons -->
+  <div class="memorial-button-group">
+    <button type="submit" class="memorial-form-submit" id="submit-button">
+      <span class="submit-text">Submit</span>
+      <span class="submit-loading" style="display: none;">Submitting...</span>
+    </button>
+    <a href="mailto:contact@example.com" class="memorial-email-button">Email Us</a>
+  </div>
+</form>

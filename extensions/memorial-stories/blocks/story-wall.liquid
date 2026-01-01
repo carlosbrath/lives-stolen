@@ -1,6 +1,6 @@
 {% comment %}
-  Memorial Stories Wall Block - Complete Page
-  Displays memorial wall with filters and submission form
+  Memorial Stories Wall Block - Component-Based Architecture
+  Displays memorial wall with filters and submission form using reusable components
 {% endcomment %}
 
 {% schema %}
@@ -24,7 +24,7 @@
       "type": "text",
       "id": "form_heading",
       "label": "Form Section Heading",
-      "default": "Lost someone you love to traffic violence?"
+      "default": "Have you or someone you love been impacted by traffic violence?"
     },
     {
       "type": "text",
@@ -53,214 +53,43 @@
 {% endschema %}
 
 <div class="memorial-page-container">
-  <!-- Memorial Wall Header -->
-  <header class="memorial-wall-header">
-    <h1 class="memorial-wall-title">{{ block.settings.heading }}</h1>
-    <p class="memorial-wall-description">{{ block.settings.description }}</p>
-
-    <!-- Stats and Filter Buttons -->
-    <div class="memorial-stats-container">
-      <div class="memorial-stat-box">
-        <h3 class="memorial-stat-label">Lives Stolen: <span id="lives-stolen-count">0</span></h3>
-        <button class="memorial-heading-button memorial-heading-button-active" id="filter-fatal">
-          See Lives Stolenmnnn
-        </button>
-      </div>
-
-      <div class="memorial-stat-box">
-        <h3 class="memorial-stat-label">Lives Shattered: <span id="lives-shattered-count">0</span></h3>
-        <button class="memorial-heading-button" id="filter-nonfatal">
-          See Lives Shattered
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Section Title and Additional Filters -->
-  <div class="memorial-section-header">
-    <h2 class="memorial-section-title" id="current-section-title">Lives Stolen</h2>
-
-    <div class="memorial-filter-container">
-      <!-- Filter Toggle Button -->
-      <button class="memorial-filter-toggle-button" id="filter-toggle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 6h18M7 12h10M10 18h4" />
-        </svg>
-        Filter
-      </button>
-
-      <!-- Filter Dropdown -->
-      <div class="memorial-filter-dropdown" id="filter-dropdown" style="display: none;">
-        <!-- Road User Type -->
-        <div class="memorial-filter-group">
-          <button class="memorial-filter-button" data-filter-group="roadUserType">
-            <span>Road-user type</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
-          <div class="memorial-filter-options">
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="roadUserType" value="Cyclist">
-              <span>Cyclist</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="roadUserType" value="Pedestrian">
-              <span>Pedestrian</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="roadUserType" value="Motorcyclist">
-              <span>Motorcyclist</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Age Range -->
-        <div class="memorial-filter-group">
-          <button class="memorial-filter-button" data-filter-group="ageRange">
-            <span>Age range</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
-          <div class="memorial-filter-options">
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="ageRange" value="0-17">
-              <span>0-17</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="ageRange" value="18-30">
-              <span>18-30</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="ageRange" value="31-45">
-              <span>31-45</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="ageRange" value="46-60">
-              <span>46-60</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="ageRange" value="60+">
-              <span>60+</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Gender -->
-        <div class="memorial-filter-group">
-          <button class="memorial-filter-button" data-filter-group="gender">
-            <span>Gender</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
-          <div class="memorial-filter-options">
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="gender" value="Male">
-              <span>Male</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="gender" value="Female">
-              <span>Female</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="gender" value="Other">
-              <span>Other</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- State -->
-        <div class="memorial-filter-group">
-          <button class="memorial-filter-button" data-filter-group="state">
-            <span>State</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
-          <div class="memorial-filter-options">
-            {% assign states_string = block.settings.us_states | newline_to_br | split: '<br />' %}
-            {% for state in states_string %}
-              {% assign trimmed_state = state | strip %}
-              {% if trimmed_state != blank %}
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="state" value="{{ trimmed_state }}">
-              <span>{{ trimmed_state }}</span>
-            </label>
-              {% endif %}
-            {% endfor %}
-          </div>
-        </div>
-
-        <!-- Year -->
-        <div class="memorial-filter-group">
-          <button class="memorial-filter-button" data-filter-group="year">
-            <span>Year</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
-          <div class="memorial-filter-options">
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="year" value="2025">
-              <span>2025</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="year" value="2024">
-              <span>2024</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="year" value="2023">
-              <span>2023</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="year" value="2022">
-              <span>2022</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="year" value="2021">
-              <span>2021</span>
-            </label>
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="year" value="2020">
-              <span>2020</span>
-            </label>
-          </div>
-        </div>
-
-        <button class="memorial-clear-filters-button" id="clear-filters" style="display: none;">
-          Clear all filters
-        </button>
-      </div>
-
-      <div class="memorial-filter-overlay" id="filter-overlay" style="display: none;"></div>
-    </div>
-  </div>
+  <!-- Header with Stats Component - 3 Categories -->
+  {% render 'header-stats',
+    heading: block.settings.heading,
+    description: block.settings.description
+  %}
 
   <!-- Content Wrapper -->
   <div class="memorial-content-wrapper">
-    <div class="memorial-memorials-section">
-      <!-- Stories Grid -->
-      <div class="memorial-memorials-grid" id="stories-grid">
-        <div class="memorial-loading">
-          <div class="memorial-loading__spinner"></div>
-          <p>Loading stories...</p>
-        </div>
-      </div>
+    <!-- Lives Stolen Section -->
+    {% assign section_id = 'lives-stolen-section' %}
+    {% assign section_title = 'Lives Stolen' %}
+    {% assign injury_type = 'Fatal' %}
+    {% assign grid_id = 'lives-stolen-grid' %}
+    {% assign filter_id = 'lives-stolen-filter' %}
+    {% assign see_all_id = 'lives-stolen-see-all' %}
+    {% assign us_states = block.settings.us_states %}
+    {% include 'story-section' %}
 
-      <!-- Load More Button -->
-      <div class="memorial-load-more-container" id="load-more-container" style="display: none;">
-        <button class="memorial-load-more-button" id="load-more-button">
-          Load More
-        </button>
-      </div>
+    <!-- Lives Shattered Section -->
+    {% assign section_id = 'lives-shattered-section' %}
+    {% assign section_title = 'Lives Shattered' %}
+    {% assign injury_type = 'Non-fatal' %}
+    {% assign grid_id = 'lives-shattered-grid' %}
+    {% assign filter_id = 'lives-shattered-filter' %}
+    {% assign see_all_id = 'lives-shattered-see-all' %}
+    {% assign us_states = block.settings.us_states %}
+    {% include 'story-section' %}
 
-      <!-- Empty State -->
-      <div class="memorial-empty-state" id="empty-state" style="display: none;">
-        <p>No memorials found matching your filters.</p>
-      </div>
-    </div>
+    <!-- Lives Forever Changed Section -->
+    {% assign section_id = 'lives-changed-section' %}
+    {% assign section_title = 'Lives Forever Changed' %}
+    {% assign injury_type = 'Not-hit' %}
+    {% assign grid_id = 'lives-changed-grid' %}
+    {% assign filter_id = 'lives-changed-filter' %}
+    {% assign see_all_id = 'lives-changed-see-all' %}
+    {% assign us_states = block.settings.us_states %}
+    {% include 'story-section' %}
   </div>
 
   <!-- Submit Story Form Section -->
@@ -272,151 +101,28 @@
 
     <!-- Form Container -->
     <div class="memorial-form-container-wrapper">
-      <form id="memorial-submission-form" class="memorial-form">
-        <div class="memorial-form-row">
-          <div class="memorial-form-group">
-            <label for="submitterName">Your Name *</label>
-            <input type="text" id="submitterName" name="submitterName" required>
-          </div>
-          <div class="memorial-form-group">
-            <label for="submitterEmail">Your Email *</label>
-            <input type="email" id="submitterEmail" name="submitterEmail" required>
-          </div>
-        </div>
+      <!-- Submission Form Component -->
+      {% render 'submission-form',
+        us_states: block.settings.us_states
+      %}
 
-        <div class="memorial-form-row">
-          <div class="memorial-form-group">
-            <label for="victimName">Victim's Name</label>
-            <input type="text" id="victimName" name="victimName">
-          </div>
-          <div class="memorial-form-group">
-            <label for="relation">Your Relation to Victim</label>
-            <input type="text" id="relation" name="relation">
-          </div>
-        </div>
-
-        <div class="memorial-form-row">
-          <div class="memorial-form-group">
-            <label for="incidentDate">Incident Date *</label>
-            <input type="date" id="incidentDate" name="incidentDate" required>
-          </div>
-          <div class="memorial-form-group">
-            <label for="state">State *</label>
-            <select id="state" name="state" required>
-              <option value="">Select a state</option>
-              {% assign states_string = block.settings.us_states | newline_to_br | split: '<br />' %}
-              {% for state in states_string %}
-                {% assign trimmed_state = state | strip %}
-                {% if trimmed_state != blank %}
-              <option value="{{ trimmed_state }}">{{ trimmed_state }}</option>
-                {% endif %}
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-
-        <div class="memorial-form-row">
-          <div class="memorial-form-group">
-            <label for="roadUserType">Road User Type *</label>
-            <select id="roadUserType" name="roadUserType" required>
-              <option value="">Select type</option>
-              <option value="Cyclist">Cyclist</option>
-              <option value="Pedestrian">Pedestrian</option>
-              <option value="Motorcyclist">Motorcyclist</option>
-            </select>
-          </div>
-          <div class="memorial-form-group">
-            <label for="injuryType">Injury Type *</label>
-            <select id="injuryType" name="injuryType" required>
-              <option value="">Select type</option>
-              <option value="Fatal">Fatal</option>
-              <option value="Non-fatal">Non-fatal</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="memorial-form-row">
-          <div class="memorial-form-group">
-            <label for="age">Age</label>
-            <input type="number" id="age" name="age" min="0" max="120">
-          </div>
-          <div class="memorial-form-group">
-            <label for="gender">Gender</label>
-            <select id="gender" name="gender">
-              <option value="">Select gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="memorial-form-group">
-          <label for="victimStory">Tell Their Story *</label>
-          <textarea id="victimStory" name="victimStory" rows="8" required placeholder="Share the story of your loved one..."></textarea>
-        </div>
-
-        <div class="memorial-form-group">
-          <label for="photo-upload">Photos (optional, max 10)</label>
-          <div class="memorial-upload-container">
-            <input
-              type="file"
-              id="photo-upload"
-              name="photos"
-              accept="image/*"
-              multiple
-              class="memorial-file-input"
-            >
-            <div class="memorial-upload-area" id="upload-area">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-              </svg>
-              <p class="memorial-upload-text">Drag & drop photos here or click to browse</p>
-              <p class="memorial-upload-hint">Supports: JPG, PNG, GIF (max 10 images)</p>
-              <p class="memorial-upload-count" id="upload-count">0 / 10 images</p>
-            </div>
-            <div class="memorial-preview-grid" id="preview-grid"></div>
-            <div class="memorial-upload-error" id="upload-error" style="display: none;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              <div class="memorial-upload-error-content">
-                <strong>Upload Error</strong>
-                <p id="upload-error-message"></p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="memorial-form-error" id="form-error" style="display: none;"></div>
-
-        <button type="submit" class="memorial-form-submit" id="submit-button">
-          <span class="submit-text">Submit Story</span>
-          <span class="submit-loading" style="display: none;">Submitting...</span>
-        </button>
-      </form>
-
-      <!-- Success Message -->
-      <div id="memorial-form-success" class="memorial-success-overlay" style="display: none;">
-        <div class="memorial-success-card">
-          <div class="memorial-success-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-              <path d="M20 6L9 17l-5-5" />
-            </svg>
-          </div>
-          <h2 class="memorial-success-title">Thank You!</h2>
-          <p class="memorial-success-message">Your submission has been received. We appreciate you sharing this story.</p>
-          <button class="memorial-success-button" onclick="window.location.href='#memorial-stories-wall'">
-            Return to Memorial Wall
-          </button>
-        </div>
-      </div>
+      <!-- Success Message Component -->
+      {% render 'success-message',
+        success_id: 'memorial-form-success',
+        title: 'Thank You!',
+        message: 'Your submission has been received. We appreciate you sharing this story.',
+        button_text: 'OK',
+        button_action: "location.reload()"
+      %}
     </div>
   </section>
 </div>
-{% assign base_url = 'https://stories-app.fly.dev/' %}
+
+{% comment %} {% assign base_url = 'https://stories-app.fly.dev/' %} {% endcomment %}
+{% assign base_url = 'https://charms-continuing-simon-wins.trycloudflare.com/' %}
+
+{% comment %} LOCAL {% endcomment %}
+{% comment %} {% assign base_url = 'http://localhost:3000/' %} {% endcomment %}
 
 <!-- Load CSS from app -->
 <link rel="stylesheet" href="{{ base_url }}assets/memorial-stories.css">

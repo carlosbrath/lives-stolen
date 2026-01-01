@@ -229,44 +229,80 @@ const MemorialStoriesUtils = {
 };
 
 /**
- * Story Wall Manager
- * Handles the complete story wall functionality with filters
+ * Story Wall Manager - 3 Section Version
+ * Handles 3 independent sections: Lives Stolen, Lives Shattered, Lives Forever Changed
+ * Each section has its own filters, grid, and "See all" button
  */
 class StoryWallManager {
   constructor(config = {}) {
     this.api = new MemorialStoriesAPI(config.apiBaseUrl || 'https://stories-app.fly.dev');
-    this.initialLoad = config.initialLoad || 12;
-    this.itemsPerPage = 12;
     this.allStories = [];
-    this.displayCount = this.initialLoad;
 
-    // Filter state matching the app
-    this.filters = {
-      roadUserType: [],
-      ageRange: [],
-      gender: [],
-      injuryType: "Fatal", // Default to Lives Stolen
-      state: [],
-      year: [],
+    // Configuration for 3 sections
+    this.sections = {
+      'Fatal': {
+        injuryType: 'Fatal',
+        gridId: 'lives-stolen-grid',
+        filterId: 'lives-stolen-filter',
+        seeAllId: 'lives-stolen-see-all',
+        displayCount: 18, // 3 rows x 6 columns
+        showAll: false,
+        filters: {
+          roadUserType: [],
+          ageRange: [],
+          gender: [],
+          state: [],
+          year: []
+        },
+        expandedGroups: {}
+      },
+      'Non-fatal': {
+        injuryType: 'Non-fatal',
+        gridId: 'lives-shattered-grid',
+        filterId: 'lives-shattered-filter',
+        seeAllId: 'lives-shattered-see-all',
+        displayCount: 18,
+        showAll: false,
+        filters: {
+          roadUserType: [],
+          ageRange: [],
+          gender: [],
+          state: [],
+          year: []
+        },
+        expandedGroups: {}
+      },
+      'Not-hit': {
+        injuryType: 'Not-hit',
+        gridId: 'lives-changed-grid',
+        filterId: 'lives-changed-filter',
+        seeAllId: 'lives-changed-see-all',
+        displayCount: 18,
+        showAll: false,
+        filters: {
+          roadUserType: [],
+          ageRange: [],
+          gender: [],
+          state: [],
+          year: []
+        },
+        expandedGroups: {}
+      }
     };
 
-    this.expandedGroups = {};
     this.init();
   }
 
   async init() {
     await this.loadStories();
     this.setupEventListeners();
-    this.renderStories();
+    this.renderAllSections();
   }
 
   async loadStories() {
     try {
-      // Fetch all published stories
       const data = await this.api.fetchStories();
       this.allStories = data.stories || [];
-
-      // Update stats
       this.updateStats();
     } catch (error) {
       console.error('Error loading stories:', error);
@@ -277,89 +313,80 @@ class StoryWallManager {
   updateStats() {
     const livesStolen = this.allStories.filter(s => s.injuryType === "Fatal").length;
     const livesShattered = this.allStories.filter(s => s.injuryType === "Non-fatal").length;
+    const livesChanged = this.allStories.filter(s => s.injuryType === "Not-hit").length;
 
     const stolenCountEl = document.getElementById('lives-stolen-count');
     const shatteredCountEl = document.getElementById('lives-shattered-count');
+    const changedCountEl = document.getElementById('lives-changed-count');
 
     if (stolenCountEl) stolenCountEl.textContent = livesStolen;
     if (shatteredCountEl) shatteredCountEl.textContent = livesShattered;
+    if (changedCountEl) changedCountEl.textContent = livesChanged;
   }
 
   setupEventListeners() {
-    // Filter toggle button
-    const filterToggle = document.getElementById('filter-toggle');
-    const filterDropdown = document.getElementById('filter-dropdown');
-    const filterOverlay = document.getElementById('filter-overlay');
+    // Setup for each section
+    Object.keys(this.sections).forEach(injuryType => {
+      const section = this.sections[injuryType];
 
-    if (filterToggle) {
-      filterToggle.addEventListener('click', () => {
-        const isOpen = filterDropdown.style.display === 'block';
-        filterDropdown.style.display = isOpen ? 'none' : 'block';
-        filterOverlay.style.display = isOpen ? 'none' : 'block';
-      });
-    }
+      // Filter toggle
+      const filterToggle = document.getElementById(`${section.filterId}-toggle`);
+      const filterDropdown = document.getElementById(section.filterId);
+      const filterOverlay = document.getElementById(`${section.filterId}-overlay`);
 
-    if (filterOverlay) {
-      filterOverlay.addEventListener('click', () => {
-        filterDropdown.style.display = 'none';
-        filterOverlay.style.display = 'none';
-      });
-    }
+      if (filterToggle && filterDropdown && filterOverlay) {
+        filterToggle.addEventListener('click', () => {
+          const isOpen = filterDropdown.style.display === 'block';
+          filterDropdown.style.display = isOpen ? 'none' : 'block';
+          filterOverlay.style.display = isOpen ? 'none' : 'block';
+        });
 
-    // Filter group expansion
-    const filterButtons = document.querySelectorAll('.memorial-filter-button');
-    filterButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const groupName = button.dataset.filterGroup;
-        this.toggleFilterGroup(groupName, button);
+        filterOverlay.addEventListener('click', () => {
+          filterDropdown.style.display = 'none';
+          filterOverlay.style.display = 'none';
+        });
+      }
+
+      // Filter group expansion buttons
+      const filterButtons = filterDropdown?.querySelectorAll('.memorial-filter-button');
+      filterButtons?.forEach(button => {
+        button.addEventListener('click', () => {
+          const groupName = button.dataset.filterGroup;
+          this.toggleFilterGroup(injuryType, groupName, button);
+        });
       });
+
+      // Filter checkboxes (only for this section)
+      const filterCheckboxes = filterDropdown?.querySelectorAll(`.memorial-filter-option input[type="checkbox"][data-section="${injuryType}"]`);
+      filterCheckboxes?.forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+          this.handleFilterChange(injuryType, e.target.name, e.target.value, e.target.checked);
+        });
+      });
+
+      // Clear filters button
+      const clearButton = document.getElementById(`${section.filterId}-clear`);
+      if (clearButton) {
+        clearButton.addEventListener('click', () => this.clearFilters(injuryType));
+      }
+
+      // See all button
+      const seeAllButton = document.getElementById(section.seeAllId);
+      if (seeAllButton) {
+        seeAllButton.addEventListener('click', () => this.toggleSeeAll(injuryType));
+      }
     });
-
-    // Filter checkboxes
-    const filterCheckboxes = document.querySelectorAll('.memorial-filter-option input[type="checkbox"]');
-    filterCheckboxes.forEach(checkbox => {
-      checkbox.addEventListener('change', (e) => {
-        this.handleFilterChange(e.target.name, e.target.value, e.target.checked);
-      });
-    });
-
-    // Lives Stolen/Shattered buttons
-    const fatalButton = document.getElementById('filter-fatal');
-    const nonfatalButton = document.getElementById('filter-nonfatal');
-
-    if (fatalButton) {
-      fatalButton.addEventListener('click', () => {
-        this.setInjuryTypeFilter('Fatal', fatalButton, nonfatalButton);
-      });
-    }
-
-    if (nonfatalButton) {
-      nonfatalButton.addEventListener('click', () => {
-        this.setInjuryTypeFilter('Non-fatal', nonfatalButton, fatalButton);
-      });
-    }
-
-    // Clear filters button
-    const clearButton = document.getElementById('clear-filters');
-    if (clearButton) {
-      clearButton.addEventListener('click', () => this.clearAllFilters());
-    }
-
-    // Load more button
-    const loadMoreButton = document.getElementById('load-more-button');
-    if (loadMoreButton) {
-      loadMoreButton.addEventListener('click', () => this.loadMore());
-    }
 
     // Form submission
     this.setupFormSubmission();
   }
 
-  toggleFilterGroup(groupName, button) {
-    this.expandedGroups[groupName] = !this.expandedGroups[groupName];
+  toggleFilterGroup(injuryType, groupName, button) {
+    const section = this.sections[injuryType];
+    section.expandedGroups[groupName] = !section.expandedGroups[groupName];
     const options = button.nextElementSibling;
 
-    if (this.expandedGroups[groupName]) {
+    if (section.expandedGroups[groupName]) {
       button.classList.add('memorial-filter-button-expanded');
       options.classList.add('memorial-filter-options-expanded');
     } else {
@@ -368,107 +395,103 @@ class StoryWallManager {
     }
   }
 
-  handleFilterChange(filterName, value, isChecked) {
-    if (filterName === "injuryType") {
-      this.filters[filterName] = value;
-    } else {
-      const currentValues = this.filters[filterName];
-      if (isChecked) {
-        if (!currentValues.includes(value)) {
-          this.filters[filterName] = [...currentValues, value];
-        }
-      } else {
-        this.filters[filterName] = currentValues.filter(v => v !== value);
+  handleFilterChange(injuryType, filterName, value, isChecked) {
+    const section = this.sections[injuryType];
+    const currentValues = section.filters[filterName];
+
+    if (isChecked) {
+      if (!currentValues.includes(value)) {
+        section.filters[filterName] = [...currentValues, value];
       }
+    } else {
+      section.filters[filterName] = currentValues.filter(v => v !== value);
     }
 
-    this.displayCount = this.itemsPerPage;
-    this.renderStories();
-    this.updateClearFiltersButton();
+    this.renderSection(injuryType);
+    this.updateClearFiltersButton(injuryType);
   }
 
-  setInjuryTypeFilter(type, activeButton, inactiveButton) {
-    this.filters.injuryType = type;
-    this.displayCount = this.itemsPerPage;
+  clearFilters(injuryType) {
+    const section = this.sections[injuryType];
 
-    // Update button states
-    activeButton.classList.add('memorial-heading-button-active');
-    inactiveButton.classList.remove('memorial-heading-button-active');
-
-    // Update section title
-    const sectionTitle = document.getElementById('current-section-title');
-    if (sectionTitle) {
-      sectionTitle.textContent = type === 'Fatal' ? 'Lives Stolen' : 'Lives Shattered';
-    }
-
-    this.renderStories();
-  }
-
-  clearAllFilters() {
-    // Reset all filters except injury type
-    this.filters = {
+    // Reset all filters
+    section.filters = {
       roadUserType: [],
       ageRange: [],
       gender: [],
-      injuryType: this.filters.injuryType, // Keep current injury type
       state: [],
-      year: [],
+      year: []
     };
 
-    // Uncheck all checkboxes
-    const checkboxes = document.querySelectorAll('.memorial-filter-option input[type="checkbox"]');
-    checkboxes.forEach(checkbox => {
+    // Uncheck all checkboxes for this section
+    const filterDropdown = document.getElementById(section.filterId);
+    const checkboxes = filterDropdown?.querySelectorAll(`input[type="checkbox"][data-section="${injuryType}"]`);
+    checkboxes?.forEach(checkbox => {
       checkbox.checked = false;
     });
 
-    this.displayCount = this.itemsPerPage;
-    this.renderStories();
-    this.updateClearFiltersButton();
+    this.renderSection(injuryType);
+    this.updateClearFiltersButton(injuryType);
   }
 
-  updateClearFiltersButton() {
+  updateClearFiltersButton(injuryType) {
+    const section = this.sections[injuryType];
     const hasActiveFilters =
-      this.filters.roadUserType.length > 0 ||
-      this.filters.ageRange.length > 0 ||
-      this.filters.gender.length > 0 ||
-      this.filters.state.length > 0 ||
-      this.filters.year.length > 0;
+      section.filters.roadUserType.length > 0 ||
+      section.filters.ageRange.length > 0 ||
+      section.filters.gender.length > 0 ||
+      section.filters.state.length > 0 ||
+      section.filters.year.length > 0;
 
-    const clearButton = document.getElementById('clear-filters');
+    const clearButton = document.getElementById(`${section.filterId}-clear`);
     if (clearButton) {
       clearButton.style.display = hasActiveFilters ? 'block' : 'none';
     }
   }
 
-  getFilteredStories() {
+  toggleSeeAll(injuryType) {
+    const section = this.sections[injuryType];
+    section.showAll = !section.showAll;
+
+    const button = document.getElementById(section.seeAllId);
+    if (button) {
+      button.textContent = section.showAll ? 'See less' : 'See all';
+    }
+
+    this.renderSection(injuryType);
+  }
+
+  getFilteredStories(injuryType) {
+    const section = this.sections[injuryType];
+
     return this.allStories.filter(story => {
+      // Injury Type (section filter)
+      if (story.injuryType !== injuryType) {
+        return false;
+      }
+
       // Road User Type
-      if (this.filters.roadUserType.length > 0 && !this.filters.roadUserType.includes(story.category)) {
+      if (section.filters.roadUserType.length > 0 && !section.filters.roadUserType.includes(story.category)) {
         return false;
       }
 
       // Age Range
-      if (this.filters.ageRange.length > 0 && !MemorialStoriesUtils.matchesAgeRange(story, this.filters.ageRange)) {
+      if (section.filters.ageRange.length > 0 && !MemorialStoriesUtils.matchesAgeRange(story, section.filters.ageRange)) {
         return false;
       }
 
       // Gender
-      if (this.filters.gender.length > 0 && !this.filters.gender.includes(story.gender)) {
-        return false;
-      }
-
-      // Injury Type
-      if (this.filters.injuryType && story.injuryType !== this.filters.injuryType) {
+      if (section.filters.gender.length > 0 && !section.filters.gender.includes(story.gender)) {
         return false;
       }
 
       // State
-      if (this.filters.state.length > 0 && !this.filters.state.includes(story.state)) {
+      if (section.filters.state.length > 0 && !section.filters.state.includes(story.state)) {
         return false;
       }
 
       // Year
-      if (this.filters.year.length > 0 && !this.filters.year.includes(story.year)) {
+      if (section.filters.year.length > 0 && !section.filters.year.includes(story.year)) {
         return false;
       }
 
@@ -476,39 +499,41 @@ class StoryWallManager {
     });
   }
 
-  renderStories() {
-    const storiesGrid = document.getElementById('stories-grid');
-    const emptyState = document.getElementById('empty-state');
-    const loadMoreContainer = document.getElementById('load-more-container');
+  renderSection(injuryType) {
+    const section = this.sections[injuryType];
+    const grid = document.getElementById(section.gridId);
+    const emptyState = document.getElementById(`${section.gridId}-empty`);
+    const seeAllContainer = document.getElementById(`${section.seeAllId}-container`);
 
-    if (!storiesGrid) return;
+    if (!grid) return;
 
-    const filteredStories = this.getFilteredStories();
-    const displayedStories = filteredStories.slice(0, this.displayCount);
-    const hasMoreStories = this.displayCount < filteredStories.length;
+    const filteredStories = this.getFilteredStories(injuryType);
+    const displayedStories = section.showAll ? filteredStories : filteredStories.slice(0, section.displayCount);
+    const hasMore = filteredStories.length > section.displayCount;
 
     if (filteredStories.length === 0) {
-      storiesGrid.innerHTML = '';
+      grid.innerHTML = '';
       if (emptyState) emptyState.style.display = 'block';
-      if (loadMoreContainer) loadMoreContainer.style.display = 'none';
+      if (seeAllContainer) seeAllContainer.style.display = 'none';
     } else {
       if (emptyState) emptyState.style.display = 'none';
 
       // Render story cards
-      storiesGrid.innerHTML = displayedStories.map(story =>
+      grid.innerHTML = displayedStories.map(story =>
         MemorialStoriesUtils.createStoryCard(story, '/pages/story-detail')
       ).join('');
 
-      // Show/hide load more button
-      if (loadMoreContainer) {
-        loadMoreContainer.style.display = hasMoreStories ? 'flex' : 'none';
+      // Show/hide see all button
+      if (seeAllContainer) {
+        seeAllContainer.style.display = hasMore || section.showAll ? 'flex' : 'none';
       }
     }
   }
 
-  loadMore() {
-    this.displayCount += this.itemsPerPage;
-    this.renderStories();
+  renderAllSections() {
+    Object.keys(this.sections).forEach(injuryType => {
+      this.renderSection(injuryType);
+    });
   }
 
   setupFormSubmission() {
@@ -522,15 +547,12 @@ class StoryWallManager {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      // Get button elements once at the start
       const submitText = submitButton ? submitButton.querySelector('.submit-text') : null;
       const submitLoading = submitButton ? submitButton.querySelector('.submit-loading') : null;
 
-      // Clear previous errors
       if (errorDiv) errorDiv.style.display = 'none';
       if (window.imageUploadManager) window.imageUploadManager.clearError();
 
-      // Show loading state
       if (submitButton) {
         submitButton.disabled = true;
         if (submitText) submitText.style.display = 'none';
@@ -540,16 +562,12 @@ class StoryWallManager {
       try {
         let photoUrls = [];
 
-        // Step 1: Upload images first (if any)
         if (window.imageUploadManager && window.imageUploadManager.selectedFiles.length > 0) {
-          // Update button text to show upload progress
           if (submitLoading) submitLoading.textContent = 'Uploading images...';
 
           try {
             photoUrls = await window.imageUploadManager.uploadFiles();
           } catch (uploadError) {
-
-            // Show upload error
             const errorMessage = uploadError.message || 'Failed to upload images. Please try again.';
             if (window.imageUploadManager) {
               window.imageUploadManager.showError(errorMessage);
@@ -559,7 +577,6 @@ class StoryWallManager {
               errorDiv.style.display = 'block';
             }
 
-            // Reset button
             if (submitButton) {
               submitButton.disabled = false;
               if (submitText) submitText.style.display = 'inline';
@@ -569,33 +586,26 @@ class StoryWallManager {
               }
             }
 
-            return; // Stop submission if upload fails
+            return;
           }
         }
 
-        // Update button text for form submission
         if (submitLoading) submitLoading.textContent = 'Submitting story...';
 
-        // Step 2: Prepare form data with uploaded CDN URLs
         const formData = new FormData(form);
         formData.set('photoUrls', JSON.stringify(photoUrls));
         formData.set('shop', window.MEMORIAL_SETTINGS?.shop || 'public');
 
-        // Step 3: Submit story with CDN URLs
-        const result = await this.api.submitStory(formData, []); // No files, just URLs
+        const result = await this.api.submitStory(formData, []);
 
         if (result.success) {
-
-          // Show success message
           form.style.display = 'none';
           if (successDiv) successDiv.style.display = 'block';
 
-          // Reset image upload manager
           if (window.imageUploadManager) {
             window.imageUploadManager.reset();
           }
 
-          // Scroll to success message
           if (successDiv) {
             successDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
@@ -605,14 +615,11 @@ class StoryWallManager {
         }
 
       } catch (error) {
-
-        // Show error
         if (errorDiv) {
           errorDiv.textContent = error.message || 'Submission failed. Please try again.';
           errorDiv.style.display = 'block';
         }
 
-        // Reset button
         if (submitButton) {
           submitButton.disabled = false;
           if (submitText) submitText.style.display = 'inline';
@@ -1303,7 +1310,7 @@ if (typeof window !== 'undefined') {
 
   // Auto-initialize story wall if settings are present
   document.addEventListener('DOMContentLoaded', function() {
-    if (window.MEMORIAL_SETTINGS && document.getElementById('stories-grid')) {
+    if (window.MEMORIAL_SETTINGS && document.getElementById('lives-stolen-grid')) {
       new StoryWallManager(window.MEMORIAL_SETTINGS);
     }
 

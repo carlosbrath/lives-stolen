@@ -1,0 +1,33 @@
+{% comment %}
+  Success Message Component
+  Displays a success message after form submission
+
+  Parameters:
+  - success_id: ID for the success div (default: 'memorial-form-success')
+  - title: Success title (default: 'Thank You!')
+  - message: Success message
+  - button_text: Button text (default: 'Return to Memorial Wall')
+  - button_action: onclick action for the button
+{% endcomment %}
+
+{% assign success_id = success_id | default: 'memorial-form-success' %}
+{% assign title = title | default: 'Thank You!' %}
+{% assign button_text = button_text | default: 'Return to Memorial Wall' %}
+{% assign button_action = button_action | default: "window.location.href='#memorial-stories-wall'" %}
+
+<div id="{{ success_id }}" class="memorial-success-overlay" style="display: none;">
+  <div class="memorial-success-card">
+    <div class="memorial-success-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
+    </div>
+    <h2 class="memorial-success-title">{{ title }}</h2>
+    <p class="memorial-success-message">
+      {{ message | default: 'Your submission has been received. We appreciate you sharing this story.' }}
+    </p>
+    <button class="memorial-success-button" onclick="{{ button_action }}">
+      {{ button_text }}
+    </button>
+  </div>
+</div>

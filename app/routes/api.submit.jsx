@@ -50,6 +50,8 @@ export async function action({ request }) {
     const age = formData.get("age");
     const gender = formData.get("gender");
     const victimStory = formData.get("victimStory");
+    const zipCode = formData.get("zipCode");
+    const interestedInContact = formData.get("interestedInContact");
 
     // Validate required fields
     const errors = {};
@@ -67,6 +69,11 @@ export async function action({ request }) {
 
     // Prepare submission data with proper type conversion
     const parsedAge = age && age.trim() !== "" ? parseInt(age, 10) : null;
+
+    // Parse interestedInContact as boolean
+    const parsedInterested = interestedInContact
+      ? interestedInContact === "yes" || interestedInContact === "true"
+      : null;
 
     // Parse photo URLs from form data
     const photoUrlsRaw = formData.get("photoUrls");
@@ -106,12 +113,14 @@ export async function action({ request }) {
           relation: relation && relation.trim() !== "" ? relation.trim() : null,
           incidentDate: incidentDate.trim(),
           state: state.trim(),
+          zipCode: zipCode && zipCode.trim() !== "" ? zipCode.trim() : null,
           roadUserType: roadUserType.trim(),
           injuryType: injuryType.trim(),
           age: parsedAge && !isNaN(parsedAge) ? parsedAge : null,
           gender: gender && gender.trim() !== "" ? gender.trim() : null,
           shortTitle: victimName && victimName.trim() !== "" ? victimName.trim() : `Story from ${state}`,
           victimStory: victimStory.trim(),
+          interestedInContact: parsedInterested,
           photoUrls: JSON.stringify(photoUrlsArray),
           status: "pending", // Pending admin review
         },

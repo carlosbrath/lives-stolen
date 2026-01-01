@@ -1,0 +1,26 @@
+{% comment %}
+  Stories Grid Component
+  Displays the grid of story cards with loading, empty states, and load more button
+
+  This component relies on JavaScript (StoryWallManager) to populate the grid
+{% endcomment %}
+
+<div class="memorial-memorials-section">
+  <!-- Stories Grid -->
+  <div class="memorial-memorials-grid" id="stories-grid">
+    <div class="memorial-loading">
+      <div class="memorial-loading__spinner"></div>
+      <p>Loading stories...</p>
+    </div>
+  </div>
+
+  <!-- Load More Button -->
+  <div class="memorial-load-more-container" id="load-more-container" style="display: none;">
+    <button class="memorial-load-more-button" id="load-more-button">Load More</button>
+  </div>
+
+  <!-- Empty State -->
+  <div class="memorial-empty-state" id="empty-state" style="display: none;">
+    <p>No memorials found matching your filters.</p>
+  </div>
+</div>

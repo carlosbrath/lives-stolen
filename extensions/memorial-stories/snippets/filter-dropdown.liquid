@@ -1,0 +1,164 @@
+{% comment %}
+  Filter Dropdown Component
+  Reusable filter dropdown with all filter options
+
+  Parameters:
+  - us_states: List of states (from settings)
+{% endcomment %}
+
+<div class="memorial-filter-container">
+  <!-- Filter Toggle Button -->
+  <button class="memorial-filter-toggle-button" id="filter-toggle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 6h18M7 12h10M10 18h4" />
+    </svg>
+    Filter
+  </button>
+
+  <!-- Filter Dropdown -->
+  <div class="memorial-filter-dropdown" id="filter-dropdown" style="display: none;">
+    <!-- Road User Type -->
+    <div class="memorial-filter-group">
+      <button class="memorial-filter-button" data-filter-group="roadUserType">
+        <span>Road-user type</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      <div class="memorial-filter-options">
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="roadUserType" value="Cyclist">
+          <span>Cyclist</span>
+        </label>
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="roadUserType" value="Pedestrian">
+          <span>Pedestrian</span>
+        </label>
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="roadUserType" value="Motorcyclist">
+          <span>Motorcyclist</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Age Range -->
+    <div class="memorial-filter-group">
+      <button class="memorial-filter-button" data-filter-group="ageRange">
+        <span>Age range</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      <div class="memorial-filter-options">
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="ageRange" value="0-17">
+          <span>0-17</span>
+        </label>
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="ageRange" value="18-30">
+          <span>18-30</span>
+        </label>
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="ageRange" value="31-45">
+          <span>31-45</span>
+        </label>
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="ageRange" value="46-60">
+          <span>46-60</span>
+        </label>
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="ageRange" value="60+">
+          <span>60+</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Gender -->
+    <div class="memorial-filter-group">
+      <button class="memorial-filter-button" data-filter-group="gender">
+        <span>Gender</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      <div class="memorial-filter-options">
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="gender" value="Male">
+          <span>Male</span>
+        </label>
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="gender" value="Female">
+          <span>Female</span>
+        </label>
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="gender" value="Other">
+          <span>Other</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- State -->
+    <div class="memorial-filter-group">
+      <button class="memorial-filter-button" data-filter-group="state">
+        <span>State</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      <div class="memorial-filter-options">
+        {% assign states_string = us_states | newline_to_br | split: '<br />' %}
+        {% for state in states_string %}
+          {% assign trimmed_state = state | strip %}
+          {% if trimmed_state != blank %}
+            <label class="memorial-filter-option">
+              <input type="checkbox" name="state" value="{{ trimmed_state }}">
+              <span>{{ trimmed_state }}</span>
+            </label>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Year -->
+    <div class="memorial-filter-group">
+      <button class="memorial-filter-button" data-filter-group="year">
+        <span>Year</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      <div class="memorial-filter-options">
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="year" value="2025">
+          <span>2025</span>
+        </label>
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="year" value="2024">
+          <span>2024</span>
+        </label>
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="year" value="2023">
+          <span>2023</span>
+        </label>
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="year" value="2022">
+          <span>2022</span>
+        </label>
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="year" value="2021">
+          <span>2021</span>
+        </label>
+        <label class="memorial-filter-option">
+          <input type="checkbox" name="year" value="2020">
+          <span>2020</span>
+        </label>
+      </div>
+    </div>
+
+    <button class="memorial-clear-filters-button" id="clear-filters" style="display: none;">
+      Clear all filters
+    </button>
+  </div>
+
+  <div class="memorial-filter-overlay" id="filter-overlay" style="display: none;"></div>
+</div>
