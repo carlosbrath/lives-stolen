@@ -62,34 +62,37 @@
   <!-- Content Wrapper -->
   <div class="memorial-content-wrapper">
     <!-- Lives Stolen Section -->
-    {% assign section_id = 'lives-stolen-section' %}
-    {% assign section_title = 'Lives Stolen' %}
-    {% assign injury_type = 'Fatal' %}
-    {% assign grid_id = 'lives-stolen-grid' %}
-    {% assign filter_id = 'lives-stolen-filter' %}
-    {% assign see_all_id = 'lives-stolen-see-all' %}
-    {% assign us_states = block.settings.us_states %}
-    {% include 'story-section' %}
+    {% render 'story-section',
+      section_id: 'lives-stolen-section',
+      section_title: 'Lives Stolen',
+      injury_type: 'Fatal',
+      grid_id: 'lives-stolen-grid',
+      filter_id: 'lives-stolen-filter',
+      see_all_id: 'lives-stolen-see-all',
+      us_states: block.settings.us_states
+    %}
 
     <!-- Lives Shattered Section -->
-    {% assign section_id = 'lives-shattered-section' %}
-    {% assign section_title = 'Lives Shattered' %}
-    {% assign injury_type = 'Non-fatal' %}
-    {% assign grid_id = 'lives-shattered-grid' %}
-    {% assign filter_id = 'lives-shattered-filter' %}
-    {% assign see_all_id = 'lives-shattered-see-all' %}
-    {% assign us_states = block.settings.us_states %}
-    {% include 'story-section' %}
+    {% render 'story-section',
+      section_id: 'lives-shattered-section',
+      section_title: 'Lives Shattered',
+      injury_type: 'Non-fatal',
+      grid_id: 'lives-shattered-grid',
+      filter_id: 'lives-shattered-filter',
+      see_all_id: 'lives-shattered-see-all',
+      us_states: block.settings.us_states
+    %}
 
     <!-- Lives Forever Changed Section -->
-    {% assign section_id = 'lives-changed-section' %}
-    {% assign section_title = 'Lives Forever Changed' %}
-    {% assign injury_type = 'Not-hit' %}
-    {% assign grid_id = 'lives-changed-grid' %}
-    {% assign filter_id = 'lives-changed-filter' %}
-    {% assign see_all_id = 'lives-changed-see-all' %}
-    {% assign us_states = block.settings.us_states %}
-    {% include 'story-section' %}
+    {% render 'story-section',
+      section_id: 'lives-changed-section',
+      section_title: 'Lives Forever Changed',
+      injury_type: 'Not-hit',
+      grid_id: 'lives-changed-grid',
+      filter_id: 'lives-changed-filter',
+      see_all_id: 'lives-changed-see-all',
+      us_states: block.settings.us_states
+    %}
   </div>
 
   <!-- Submit Story Form Section -->
@@ -103,7 +106,8 @@
     <div class="memorial-form-container-wrapper">
       <!-- Submission Form Component -->
       {% render 'submission-form',
-        us_states: block.settings.us_states
+        us_states: block.settings.us_states,
+        form_id: 'memorial-submission-form'
       %}
 
       <!-- Success Message Component -->
@@ -112,17 +116,14 @@
         title: 'Thank You!',
         message: 'Your submission has been received. We appreciate you sharing this story.',
         button_text: 'OK',
-        button_action: "location.reload()"
+        button_action: 'location.reload()'
       %}
     </div>
   </section>
 </div>
 
-{% comment %} {% assign base_url = 'https://stories-app.fly.dev/' %} {% endcomment %}
-{% assign base_url = 'https://charms-continuing-simon-wins.trycloudflare.com/' %}
+{% assign base_url = 'https://stories-app.fly.dev/' %}
 
-{% comment %} LOCAL {% endcomment %}
-{% comment %} {% assign base_url = 'http://localhost:3000/' %} {% endcomment %}
 
 <!-- Load CSS from app -->
 <link rel="stylesheet" href="{{ base_url }}assets/memorial-stories.css">
