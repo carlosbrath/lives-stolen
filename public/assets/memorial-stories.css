@@ -108,6 +108,7 @@
   padding: 0px 25px;
   border-bottom: 3px solid #000000;
   background: #ffffff;
+  position: relative;
 }
 
 .memorial-section-title {
@@ -173,7 +174,7 @@
   min-width: 280px;
   max-width: 350px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 100;
+  z-index: 1000;
   max-height: 70vh;
   overflow-y: auto;
 }
@@ -291,7 +292,7 @@
   display: none;
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 999;
 }
 
 /* ===========================================================================
