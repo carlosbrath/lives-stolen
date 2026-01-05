@@ -150,7 +150,7 @@ const MemorialStoriesUtils = {
             <strong>Name:</strong> ${story.victimName || story.title}
           </div>
           <div class="memorial-card__detail">
-            <strong>Age:</strong> ${story.age || 'N/A'}
+            <strong>Age:</strong> ${MemorialStoriesUtils.getAgeRangeDisplay(story.age)}
           </div>
           <div class="memorial-card__detail">
             <strong>Type:</strong> ${story.category}
@@ -225,6 +225,21 @@ const MemorialStoriesUtils = {
         : range.split("-").map(Number);
       return story.age >= min && story.age <= max;
     });
+  },
+
+  /**
+   * Convert numeric age to age range display
+   */
+  getAgeRangeDisplay(age) {
+    if (!age) return 'N/A';
+
+    if (age <= 17) return '0-17';
+    if (age >= 18 && age <= 30) return '18-30';
+    if (age >= 31 && age <= 45) return '31-45';
+    if (age >= 46 && age <= 60) return '46-60';
+    if (age > 60) return '60+';
+
+    return age; // Fallback to numeric age
   },
 };
 
@@ -600,7 +615,7 @@ class StoryWallManager {
 
         if (result.success) {
           form.style.display = 'none';
-          if (successDiv) successDiv.style.display = 'block';
+          if (successDiv) successDiv.style.display = 'flex';
 
           if (window.imageUploadManager) {
             window.imageUploadManager.reset();
@@ -1006,7 +1021,9 @@ class StoryDetailManager {
     if (!this.container || !this.story) return;
 
     const formattedDate = MemorialStoriesUtils.formatDate(this.story.date);
-    const injuryLabel = this.story.injuryType === 'Fatal' ? 'Lives Stolen' : 'Lives Shattered';
+    const injuryLabel = this.story.injuryType === 'Fatal' ? 'Lives Stolen' :
+                        this.story.injuryType === 'Non-fatal' ? 'Lives Shattered' :
+                        'Lives Forever Changed';
     const actionLabel = this.story.injuryType === 'Fatal' ? 'Killed' : 'Injured';
 
     this.container.innerHTML = `
@@ -1018,7 +1035,7 @@ class StoryDetailManager {
 
         <!-- Header with Back Button -->
         <header class="story-detail-header">
-          <a href="${this.backLinkUrl}" class="story-detail-back-button" aria-label="${this.backLinkText}">
+          <a href="${this.getBackUrl()}" class="story-detail-back-button" aria-label="Go back">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
@@ -1027,7 +1044,7 @@ class StoryDetailManager {
         </header>
 
         <!-- Main Content: Two-column layout -->
-        <div class="story-detail-content">
+        <div class="story-detail-main-content">
           <!-- Left Column: Image Gallery -->
           <div class="story-detail-image-section">
             ${this.renderImageGallery()}
@@ -1115,13 +1132,7 @@ class StoryDetailManager {
       ` : ''}
 
       ${this.story.state ? `
-        <p class="story-detail-location">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
-          ${this.story.state}
-        </p>
+        <p class="story-detail-location">${this.story.state}</p>
       ` : ''}
 
       ${this.story.date ? `
@@ -1135,21 +1146,31 @@ class StoryDetailManager {
       <!-- Share Buttons -->
       <div class="story-detail-share-buttons">
         <button class="story-detail-share-button" id="share-facebook" aria-label="Share on Facebook">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+          <svg width="26" height="44" viewBox="0 0 26 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M24 2H18C15.3478 2 12.8043 3.05357 10.9289 4.92893C9.05357 6.8043 8 9.34784 8 12V18H2V26H8V42H16V26H22L24 18H16V12C16 11.4696 16.2107 10.9609 16.5858 10.5858C16.9609 10.2107 17.4696 10 18 10H24V2Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
+
         </button>
 
         <button class="story-detail-share-button" id="share-linkedin" aria-label="Share on LinkedIn">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32 16C35.1826 16 38.2348 17.2643 40.4853 19.5147C42.7357 21.7652 44 24.8174 44 28V42H36V28C36 26.9391 35.5786 25.9217 34.8284 25.1716C34.0783 24.4214 33.0609 24 32 24C30.9391 24 29.9217 24.4214 29.1716 25.1716C28.4214 25.9217 28 26.9391 28 28V42H20V28C20 24.8174 21.2643 21.7652 23.5147 19.5147C25.7652 17.2643 28.8174 16 32 16Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 18H4V42H12V18Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 12C10.2091 12 12 10.2091 12 8C12 5.79086 10.2091 4 8 4C5.79086 4 4 5.79086 4 8C4 10.2091 5.79086 12 8 12Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
 
         <button class="story-detail-share-button" id="share-copy" aria-label="Copy link">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 30H8C6.93913 30 5.92172 29.5786 5.17157 28.8284C4.42143 28.0783 4 27.0609 4 26V8C4 6.93913 4.42143 5.92172 5.17157 5.17157C5.92172 4.42143 6.93913 4 8 4H26C27.0609 4 28.0783 4.42143 28.8284 5.17157C29.5786 5.92172 30 6.93913 30 8V10M22 18H40C42.2091 18 44 19.7909 44 22V40C44 42.2091 42.2091 44 40 44H22C19.7909 44 18 42.2091 18 40V22C18 19.7909 19.7909 18 22 18Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+
+        </button>
+
+        <button class="story-detail-share-button" id="share-more" aria-label="Share">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
           </svg>
         </button>
       </div>
@@ -1165,7 +1186,7 @@ class StoryDetailManager {
         </div>
 
         <div class="story-detail-button-wrapper">
-          <a href="${this.backLinkUrl}" class="story-detail-button">
+          <a href="${this.getBackUrl()}" class="story-detail-lives-button">
             ${injuryLabel}
           </a>
         </div>
@@ -1173,31 +1194,41 @@ class StoryDetailManager {
     `;
   }
 
+  getBackUrl() {
+    // Try to use document.referrer if it's from the same origin
+    if (document.referrer && document.referrer.includes(window.location.origin)) {
+      return document.referrer;
+    }
+    // Fall back to configured back link URL
+    return this.backLinkUrl;
+  }
+
   setupEventListeners() {
-    if (this.images.length <= 1) return;
+    // Image navigation buttons (only if multiple images)
+    if (this.images.length > 1) {
+      const prevBtn = document.getElementById('prev-image-btn');
+      const nextBtn = document.getElementById('next-image-btn');
 
-    // Image navigation buttons
-    const prevBtn = document.getElementById('prev-image-btn');
-    const nextBtn = document.getElementById('next-image-btn');
+      if (prevBtn) {
+        prevBtn.addEventListener('click', () => this.navigateImage(-1));
+      }
 
-    if (prevBtn) {
-      prevBtn.addEventListener('click', () => this.navigateImage(-1));
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => this.navigateImage(1));
+      }
+
+      // Thumbnail clicks
+      const thumbnails = document.querySelectorAll('.story-detail-thumbnail');
+      thumbnails.forEach((thumb, index) => {
+        thumb.addEventListener('click', () => this.selectImage(index));
+      });
     }
 
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => this.navigateImage(1));
-    }
-
-    // Thumbnail clicks
-    const thumbnails = document.querySelectorAll('.story-detail-thumbnail');
-    thumbnails.forEach((thumb, index) => {
-      thumb.addEventListener('click', () => this.selectImage(index));
-    });
-
-    // Share buttons
+    // Share buttons (always available)
     const facebookBtn = document.getElementById('share-facebook');
     const linkedinBtn = document.getElementById('share-linkedin');
     const copyBtn = document.getElementById('share-copy');
+    const moreBtn = document.getElementById('share-more');
 
     if (facebookBtn) {
       facebookBtn.addEventListener('click', () => this.shareStory('facebook'));
@@ -1209,6 +1240,10 @@ class StoryDetailManager {
 
     if (copyBtn) {
       copyBtn.addEventListener('click', () => this.copyLink());
+    }
+
+    if (moreBtn) {
+      moreBtn.addEventListener('click', () => this.shareNative());
     }
   }
 
@@ -1296,6 +1331,25 @@ class StoryDetailManager {
     } catch (err) {
       console.error('Failed to copy:', err);
       alert('Failed to copy link');
+    }
+  }
+
+  async shareNative() {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: this.story.victimName || this.story.title,
+          text: `Read the story of ${this.story.victimName || this.story.title}`,
+          url: window.location.href
+        });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Failed to share:', err);
+        }
+      }
+    } else {
+      // Fallback to copy link
+      this.copyLink();
     }
   }
 }

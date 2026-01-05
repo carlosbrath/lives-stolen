@@ -30,7 +30,7 @@
       "type": "text",
       "id": "form_subheading",
       "label": "Form Section Subheading",
-      "default": "Honor their memory. Share their story."
+      "default": "Honor their memory. Share their story. Share their story."
     },
     {
       "type": "range",
@@ -47,11 +47,18 @@
       "label": "US States (one per line)",
       "default": "Alabama\nAlaska\nArizona\nArkansas\nCalifornia\nColorado\nConnecticut\nDelaware\nFlorida\nGeorgia\nHawaii\nIdaho\nIllinois\nIndiana\nIowa\nKansas\nKentucky\nLouisiana\nMaine\nMaryland\nMassachusetts\nMichigan\nMinnesota\nMississippi\nMissouri\nMontana\nNebraska\nNevada\nNew Hampshire\nNew Jersey\nNew Mexico\nNew York\nNorth Carolina\nNorth Dakota\nOhio\nOklahoma\nOregon\nPennsylvania\nRhode Island\nSouth Carolina\nSouth Dakota\nTennessee\nTexas\nUtah\nVermont\nVirginia\nWashington\nWest Virginia\nWisconsin\nWyoming",
       "info": "Enter one state per line. These will be used in both the filter dropdown and submission form."
+    },
+    {
+      "type": "text",
+      "id": "contact_email",
+      "label": "Contact Email",
+      "default": "contact@example.com",
+      "info": "Email address for the 'Email Us' button in the submission form"
     }
   ]
 }
 {% endschema %}
-
+{% assign base_url = 'https://stories-app.fly.dev/' %}
 <div class="memorial-page-container">
   <!-- Header with Stats Component - 3 Categories -->
   {% render 'header-stats',
@@ -107,7 +114,8 @@
       <!-- Submission Form Component -->
       {% render 'submission-form',
         us_states: block.settings.us_states,
-        form_id: 'memorial-submission-form'
+        form_id: 'memorial-submission-form',
+        contact_email: block.settings.contact_email
       %}
 
       <!-- Success Message Component -->
@@ -122,7 +130,6 @@
   </section>
 </div>
 
-{% assign base_url = 'https://stories-app.fly.dev/' %}
 
 
 <!-- Load CSS from app -->

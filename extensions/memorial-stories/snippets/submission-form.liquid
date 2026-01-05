@@ -5,10 +5,12 @@
   Parameters:
   - us_states: List of states (from settings)
   - form_id: ID for the form (default: 'memorial-submission-form')
+  - contact_email: Email address for the Email Us button (default: 'contact@example.com')
 {% endcomment %}
 
 {% assign form_id = form_id | default: 'memorial-submission-form' %}
-
+{% assign contact_email = contact_email | default: 'contact@example.com' %}
+{% assign base_url = 'https://stories-app.fly.dev/' %}
 <form id="{{ form_id }}" class="memorial-form" method="post" onsubmit="return false;">
   <!-- Submitter Info -->
   <div class="memorial-form-row">
@@ -74,9 +76,9 @@
   </div>
 
   <!-- Road User Type | Injury Type -->
-  <div class="memorial-form-row memorial-form-row-2cols">
+  <div class="memorial-form-row memorial-form-row-3cols">
     <div class="memorial-form-group">
-      <label for="roadUserType">Road User Type *</label>
+      <label for="roadUserType">Road User Typep *</label>
       <select id="roadUserType" name="roadUserType" required>
         <option value="">Select type</option>
         <option value="Cyclist">Cyclist</option>
@@ -85,7 +87,7 @@
       </select>
     </div>
     <div class="memorial-form-group">
-      <label>Injury Type *</label>
+      <label>Injury Type (fatal / non fatal) *</label>
       <div class="memorial-radio-group">
         <label class="memorial-radio-label">
           <input type="radio" name="injuryType" value="Fatal" required>
@@ -104,10 +106,17 @@
   </div>
 
   <!-- Age | Gender -->
-  <div class="memorial-form-row memorial-form-row-2cols">
+  <div class="memorial-form-row memorial-form-row-3cols">
     <div class="memorial-form-group">
-      <label for="age">Age at Incident</label>
-      <input type="number" id="age" name="age" min="0" max="120">
+      <label for="ageRange">Age at Incident</label>
+      <select id="ageRange" name="ageRange">
+        <option value="">Select age range</option>
+        <option value="0-17">0-17</option>
+        <option value="18-30">18-30</option>
+        <option value="31-45">31-45</option>
+        <option value="46-60">46-60</option>
+        <option value="60+">60+</option>
+      </select>
     </div>
     <div class="memorial-form-group">
       <label>Gender</label>
@@ -153,11 +162,7 @@
         class="memorial-file-input"
       >
       <div class="memorial-upload-area" id="upload-area">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-        </svg>
-        <p class="memorial-upload-text">Drag & drop photos here or click to browse</p>
-        <p class="memorial-upload-hint">Supports: JPG, PNG, GIF (max 10 images)</p>
+        <img src="{{ base_url }}assets/images/browse.png" style="width:200px; height:110px " width="100" height="100" alt="Browse to upload images" class="memorial-browse-image">
         <p class="memorial-upload-count" id="upload-count">0 / 10 images</p>
       </div>
       <div class="memorial-preview-grid" id="preview-grid"></div>
@@ -199,6 +204,6 @@
       <span class="submit-text">Submit</span>
       <span class="submit-loading" style="display: none;">Submitting...</span>
     </button>
-    <a href="mailto:contact@example.com" class="memorial-email-button">Email Us</a>
+    <a href="mailto:{{ contact_email }}" class="memorial-email-button">Email Us</a>
   </div>
 </form>

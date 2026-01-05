@@ -47,7 +47,7 @@ export async function action({ request }) {
     const state = formData.get("state");
     const roadUserType = formData.get("roadUserType");
     const injuryType = formData.get("injuryType");
-    const age = formData.get("age");
+    const ageRange = formData.get("ageRange");
     const gender = formData.get("gender");
     const victimStory = formData.get("victimStory");
     const zipCode = formData.get("zipCode");
@@ -67,8 +67,23 @@ export async function action({ request }) {
       return json({ errors }, { status: 400, headers: corsHeaders });
     }
 
-    // Prepare submission data with proper type conversion
-    const parsedAge = age && age.trim() !== "" ? parseInt(age, 10) : null;
+    // Convert age range to numeric value for database storage
+    // Store the midpoint of the range for filtering purposes
+    let parsedAge = null;
+    if (ageRange && ageRange.trim() !== "") {
+      const range = ageRange.trim();
+      if (range === "0-17") {
+        parsedAge = 8; // Midpoint
+      } else if (range === "18-30") {
+        parsedAge = 24; // Midpoint
+      } else if (range === "31-45") {
+        parsedAge = 38; // Midpoint
+      } else if (range === "46-60") {
+        parsedAge = 53; // Midpoint
+      } else if (range === "60+") {
+        parsedAge = 65; // Representative value for 60+
+      }
+    }
 
     // Parse interestedInContact as boolean
     const parsedInterested = interestedInContact

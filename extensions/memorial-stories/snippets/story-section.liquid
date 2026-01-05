@@ -19,159 +19,158 @@
 
     <!-- Filter Button -->
     <button class="memorial-filter-toggle-button" id="{{ filter_id }}-toggle">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M3 6h18M7 12h10M10 18h4" />
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M33 4.5H3L15 18.69V28.5L21 31.5V18.69L33 4.5Z" stroke="#5E5E5E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       Filter
     </button>
     <!-- Filter Dropdown -->
-  <div class="memorial-filter-dropdown" id="{{ filter_id }}" style="display: none;">
-    <!-- Road User Type -->
-    <div class="memorial-filter-group">
-      <button class="memorial-filter-button" data-filter-group="roadUserType">
-        <span>Road-user type</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
-      <div class="memorial-filter-options">
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="roadUserType" value="Cyclist" data-section="{{ injury_type }}">
-          <span>Cyclist</span>
-        </label>
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="roadUserType" value="Pedestrian" data-section="{{ injury_type }}">
-          <span>Pedestrian</span>
-        </label>
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="roadUserType" value="Motorcyclist" data-section="{{ injury_type }}">
-          <span>Motorcyclist</span>
-        </label>
+    <div class="memorial-filter-dropdown" id="{{ filter_id }}" style="display: none;">
+      <!-- Road User Type -->
+      <div class="memorial-filter-group">
+        <button class="memorial-filter-button" data-filter-group="roadUserType">
+          <span>Road-user type</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        <div class="memorial-filter-options">
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="roadUserType" value="Cyclist" data-section="{{ injury_type }}">
+            <span>Cyclist</span>
+          </label>
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="roadUserType" value="Pedestrian" data-section="{{ injury_type }}">
+            <span>Pedestrian</span>
+          </label>
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="roadUserType" value="Motorcyclist" data-section="{{ injury_type }}">
+            <span>Motorcyclist</span>
+          </label>
+        </div>
       </div>
-    </div>
 
-    <!-- Age Range -->
-    <div class="memorial-filter-group">
-      <button class="memorial-filter-button" data-filter-group="ageRange">
-        <span>Age range</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
-      <div class="memorial-filter-options">
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="ageRange" value="0-17" data-section="{{ injury_type }}">
-          <span>0-17</span>
-        </label>
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="ageRange" value="18-30" data-section="{{ injury_type }}">
-          <span>18-30</span>
-        </label>
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="ageRange" value="31-45" data-section="{{ injury_type }}">
-          <span>31-45</span>
-        </label>
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="ageRange" value="46-60" data-section="{{ injury_type }}">
-          <span>46-60</span>
-        </label>
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="ageRange" value="60+" data-section="{{ injury_type }}">
-          <span>60+</span>
-        </label>
+      <!-- Age Range -->
+      <div class="memorial-filter-group">
+        <button class="memorial-filter-button" data-filter-group="ageRange">
+          <span>Age range</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        <div class="memorial-filter-options">
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="ageRange" value="0-17" data-section="{{ injury_type }}">
+            <span>0-17</span>
+          </label>
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="ageRange" value="18-30" data-section="{{ injury_type }}">
+            <span>18-30</span>
+          </label>
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="ageRange" value="31-45" data-section="{{ injury_type }}">
+            <span>31-45</span>
+          </label>
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="ageRange" value="46-60" data-section="{{ injury_type }}">
+            <span>46-60</span>
+          </label>
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="ageRange" value="60+" data-section="{{ injury_type }}">
+            <span>60+</span>
+          </label>
+        </div>
       </div>
-    </div>
 
-    <!-- Gender -->
-    <div class="memorial-filter-group">
-      <button class="memorial-filter-button" data-filter-group="gender">
-        <span>Gender</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
-      <div class="memorial-filter-options">
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="gender" value="Male" data-section="{{ injury_type }}">
-          <span>Male</span>
-        </label>
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="gender" value="Female" data-section="{{ injury_type }}">
-          <span>Female</span>
-        </label>
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="gender" value="Other" data-section="{{ injury_type }}">
-          <span>Other</span>
-        </label>
+      <!-- Gender -->
+      <div class="memorial-filter-group">
+        <button class="memorial-filter-button" data-filter-group="gender">
+          <span>Gender</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        <div class="memorial-filter-options">
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="gender" value="Male" data-section="{{ injury_type }}">
+            <span>Male</span>
+          </label>
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="gender" value="Female" data-section="{{ injury_type }}">
+            <span>Female</span>
+          </label>
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="gender" value="Other" data-section="{{ injury_type }}">
+            <span>Other</span>
+          </label>
+        </div>
       </div>
-    </div>
 
-    <!-- State -->
-    <div class="memorial-filter-group">
-      <button class="memorial-filter-button" data-filter-group="state">
-        <span>State</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
-      <div class="memorial-filter-options">
-        {% assign states_string = us_states | newline_to_br | split: '<br />' %}
-        {% for state in states_string %}
-          {% assign trimmed_state = state | strip %}
-          {% if trimmed_state != blank %}
-            <label class="memorial-filter-option">
-              <input type="checkbox" name="state" value="{{ trimmed_state }}" data-section="{{ injury_type }}">
-              <span>{{ trimmed_state }}</span>
-            </label>
-          {% endif %}
-        {% endfor %}
+      <!-- State -->
+      <div class="memorial-filter-group">
+        <button class="memorial-filter-button" data-filter-group="state">
+          <span>State</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        <div class="memorial-filter-options">
+          {% assign states_string = us_states | newline_to_br | split: '<br />' %}
+          {% for state in states_string %}
+            {% assign trimmed_state = state | strip %}
+            {% if trimmed_state != blank %}
+              <label class="memorial-filter-option">
+                <input type="checkbox" name="state" value="{{ trimmed_state }}" data-section="{{ injury_type }}">
+                <span>{{ trimmed_state }}</span>
+              </label>
+            {% endif %}
+          {% endfor %}
+        </div>
       </div>
-    </div>
 
-    <!-- Year -->
-    <div class="memorial-filter-group">
-      <button class="memorial-filter-button" data-filter-group="year">
-        <span>Year</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
-      <div class="memorial-filter-options">
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="year" value="2025" data-section="{{ injury_type }}">
-          <span>2025</span>
-        </label>
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="year" value="2024" data-section="{{ injury_type }}">
-          <span>2024</span>
-        </label>
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="year" value="2023" data-section="{{ injury_type }}">
-          <span>2023</span>
-        </label>
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="year" value="2022" data-section="{{ injury_type }}">
-          <span>2022</span>
-        </label>
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="year" value="2021" data-section="{{ injury_type }}">
-          <span>2021</span>
-        </label>
-        <label class="memorial-filter-option">
-          <input type="checkbox" name="year" value="2020" data-section="{{ injury_type }}">
-          <span>2020</span>
-        </label>
+      <!-- Year -->
+      <div class="memorial-filter-group">
+        <button class="memorial-filter-button" data-filter-group="year">
+          <span>Year</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        <div class="memorial-filter-options">
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="year" value="2025" data-section="{{ injury_type }}">
+            <span>2025</span>
+          </label>
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="year" value="2024" data-section="{{ injury_type }}">
+            <span>2024</span>
+          </label>
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="year" value="2023" data-section="{{ injury_type }}">
+            <span>2023</span>
+          </label>
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="year" value="2022" data-section="{{ injury_type }}">
+            <span>2022</span>
+          </label>
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="year" value="2021" data-section="{{ injury_type }}">
+            <span>2021</span>
+          </label>
+          <label class="memorial-filter-option">
+            <input type="checkbox" name="year" value="2020" data-section="{{ injury_type }}">
+            <span>2020</span>
+          </label>
+        </div>
       </div>
-    </div>
 
-    <button class="memorial-clear-filters-button" id="{{ filter_id }}-clear" style="display: none;">
-      Clear all filters
-    </button>
+      <button class="memorial-clear-filters-button" id="{{ filter_id }}-clear" style="display: none;">
+        Clear all filters
+      </button>
+    </div>
+    <div class="memorial-filter-overlay" id="{{ filter_id }}-overlay" style="display: none;"></div>
   </div>
-  </div>
 
-
-  <div class="memorial-filter-overlay" id="{{ filter_id }}-overlay" style="display: none;"></div>
 
   <!-- Stories Grid (6 columns) -->
   <div class="memorial-memorials-grid" id="{{ grid_id }}">
