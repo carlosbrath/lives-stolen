@@ -58,8 +58,8 @@
   ]
 }
 {% endschema %}
-{% comment %} {% assign base_url = 'https://stories-app.fly.dev/' %} {% endcomment %}
-{% assign base_url = 'https://annually-discover-assessment-citations.trycloudflare.com/' %}
+{% assign base_url = 'https://stories-app.fly.dev/' %}
+{% assign base_url = 'https://stocks-org-pupils-trance.trycloudflare.com/' %}
 <div class="memorial-page-container">
   <!-- Header with Stats Component - 3 Categories -->
   {% render 'header-stats',
@@ -104,32 +104,33 @@
   </div>
 
   <!-- Submit Story Form Section -->
-  <section class="memorial-form-section-wrapper" id="submit-story">
-    <div class="memorial-form-section-header">
-      <h2 class="memorial-form-section-title">{{ block.settings.form_heading }}</h2>
-      <p class="memorial-form-section-subtitle">{{ block.settings.form_subheading }}</p>
-    </div>
-
-    <!-- Form Container -->
-    <div class="memorial-form-container-wrapper">
-      <!-- Submission Form Component -->
-      {% render 'submission-form',
-        us_states: block.settings.us_states,
-        form_id: 'memorial-submission-form',
-        contact_email: block.settings.contact_email
-      %}
-
-      <!-- Success Message Component -->
-      {% render 'success-message',
-        success_id: 'memorial-form-success',
-        title: 'Thank You!',
-        message: 'Your submission has been received. We appreciate you sharing this story.',
-        button_text: 'OK',
-        button_action: 'location.reload()'
-      %}
-    </div>
-  </section>
+ 
 </div>
+<section class="memorial-form-section-wrapper" id="submit-story">
+  <div class="memorial-form-section-header">
+    <h2 class="memorial-form-section-title">{{ block.settings.form_heading }}</h2>
+    <p class="memorial-form-section-subtitle">{{ block.settings.form_subheading }}</p>
+  </div>
+
+  <!-- Form Container -->
+  <div class="memorial-form-container-wrapper">
+    <!-- Submission Form Component -->
+    {% render 'submission-form',
+      us_states: block.settings.us_states,
+      form_id: 'memorial-submission-form',
+      contact_email: block.settings.contact_email
+    %}
+
+    <!-- Success Message Component -->
+    {% render 'success-message',
+      success_id: 'memorial-form-success',
+      title: 'Thank You!',
+      message: 'Your submission has been received. We appreciate you sharing this story.',
+      button_text: 'OK',
+      button_action: 'location.reload()'
+    %}
+  </div>
+</section>
 
 
 

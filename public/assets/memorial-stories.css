@@ -8,37 +8,6 @@
 /* ===========================================================================
    CLAB FONTS - Using relative paths for CORS compatibility
    =========================================================================== */
-@font-face {
-  font-family: 'Clab';
-  src: url('./fonts/clab/ClabTrial-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Clab';
-  src: url('./fonts/clab/ClabTrial-Light.ttf') format('truetype');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Clab';
-  src: url('./fonts/clab/ClabTrial-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Clab';
-  src: url('./fonts/clab/Clab-Black.otf') format('truetype');
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
 
 * {
   box-sizing: border-box;
@@ -535,6 +504,7 @@
 .memorial-form-group {
   display: flex;
   flex-direction: column;
+  margin-bottom: 20px;
 }
 
 .memorial-form-group label {
@@ -1050,9 +1020,6 @@
 /* ===========================================================================
    IMAGE UPLOAD WITH DRAG & DROP
    =========================================================================== */
-.memorial-upload-container {
-  margin-top: 8px;
-}
 
 .memorial-file-input {
   display: none;

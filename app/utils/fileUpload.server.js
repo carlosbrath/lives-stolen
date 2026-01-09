@@ -11,7 +11,7 @@ const ALLOWED_MIME_TYPES = [
   'image/svg+xml'
 ];
 
-const MAX_FILE_SIZE = 1 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
 
 /**

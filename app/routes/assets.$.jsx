@@ -13,6 +13,7 @@ const contentTypes = {
   ".css": "text/css",
   ".js": "application/javascript",
   ".ttf": "font/ttf",
+  ".otf": "font/otf",
   ".woff": "font/woff",
   ".woff2": "font/woff2",
   ".png": "image/png",
@@ -60,7 +61,7 @@ export async function loader({ request, params }) {
     };
 
     // Add extra CORS headers for fonts
-    if (ext === ".ttf" || ext === ".woff" || ext === ".woff2") {
+    if (ext === ".ttf" || ext === ".otf" || ext === ".woff" || ext === ".woff2") {
       headers["Access-Control-Allow-Origin"] = "*";
       headers["Access-Control-Allow-Methods"] = "GET, OPTIONS";
       headers["Access-Control-Allow-Headers"] = "*";
