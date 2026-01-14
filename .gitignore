@@ -11,6 +11,7 @@ node_modules
 /prisma/dev.sqlite-journal
 database.sqlite
 
+FLY_DEPLOYMENT.md
 .env
 .env.*
 
