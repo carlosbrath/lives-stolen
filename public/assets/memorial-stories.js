@@ -1354,6 +1354,244 @@ class StoryDetailManager {
   }
 }
 
+/**
+ * Searchable Select Manager (Select2-like dropdown)
+ * Handles searchable dropdown with keyboard navigation
+ */
+class SearchableSelectManager {
+  constructor(containerId) {
+    this.container = document.getElementById(containerId);
+    if (!this.container) return;
+
+    this.hiddenInput = this.container.querySelector('input[type="hidden"]');
+    this.trigger = this.container.querySelector('.memorial-searchable-select-trigger');
+    this.valueDisplay = this.container.querySelector('.memorial-searchable-select-value');
+    this.dropdown = this.container.querySelector('.memorial-searchable-select-dropdown');
+    this.searchInput = this.container.querySelector('.memorial-searchable-select-input');
+    this.optionsList = this.container.querySelector('.memorial-searchable-select-options');
+    this.options = this.container.querySelectorAll('.memorial-searchable-select-option');
+
+    this.isOpen = false;
+    this.highlightedIndex = -1;
+    this.filteredOptions = Array.from(this.options);
+
+    this.init();
+  }
+
+  init() {
+    if (!this.container) return;
+
+    // Set initial placeholder state
+    this.valueDisplay.classList.add('placeholder');
+
+    // Trigger click
+    this.trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.toggle();
+    });
+
+    // Search input
+    this.searchInput.addEventListener('input', (e) => {
+      this.filterOptions(e.target.value);
+    });
+
+    // Prevent closing when clicking inside dropdown
+    this.dropdown.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+
+    // Option selection
+    this.options.forEach((option, index) => {
+      option.addEventListener('click', () => {
+        this.selectOption(option);
+      });
+
+      option.addEventListener('mouseenter', () => {
+        this.highlightOption(index);
+      });
+    });
+
+    // Keyboard navigation
+    this.searchInput.addEventListener('keydown', (e) => {
+      this.handleKeydown(e);
+    });
+
+    this.trigger.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.toggle();
+      }
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!this.container.contains(e.target)) {
+        this.close();
+      }
+    });
+
+    // Close on escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.isOpen) {
+        this.close();
+      }
+    });
+  }
+
+  toggle() {
+    if (this.isOpen) {
+      this.close();
+    } else {
+      this.open();
+    }
+  }
+
+  open() {
+    this.isOpen = true;
+    this.dropdown.style.display = 'flex';
+    this.trigger.classList.add('open');
+    this.searchInput.value = '';
+    this.filterOptions('');
+    this.searchInput.focus();
+    this.highlightedIndex = -1;
+  }
+
+  close() {
+    this.isOpen = false;
+    this.dropdown.style.display = 'none';
+    this.trigger.classList.remove('open');
+    this.highlightedIndex = -1;
+    this.clearHighlight();
+  }
+
+  filterOptions(searchTerm) {
+    const term = searchTerm.toLowerCase().trim();
+    let visibleCount = 0;
+
+    this.options.forEach((option) => {
+      const text = option.textContent.toLowerCase();
+      const matches = term === '' || text.includes(term);
+
+      if (matches) {
+        option.classList.remove('hidden');
+        visibleCount++;
+      } else {
+        option.classList.add('hidden');
+      }
+    });
+
+    // Update filtered options list
+    this.filteredOptions = Array.from(this.options).filter(
+      opt => !opt.classList.contains('hidden')
+    );
+
+    // Show/hide no results message
+    let noResults = this.optionsList.querySelector('.memorial-searchable-select-no-results');
+
+    if (visibleCount === 0) {
+      if (!noResults) {
+        noResults = document.createElement('div');
+        noResults.className = 'memorial-searchable-select-no-results';
+        noResults.textContent = 'No states found';
+        this.optionsList.appendChild(noResults);
+      }
+      noResults.style.display = 'block';
+    } else if (noResults) {
+      noResults.style.display = 'none';
+    }
+
+    // Reset highlight
+    this.highlightedIndex = -1;
+    this.clearHighlight();
+  }
+
+  selectOption(option) {
+    const value = option.dataset.value;
+    const text = option.textContent;
+
+    // Update hidden input
+    this.hiddenInput.value = value;
+
+    // Update display
+    this.valueDisplay.textContent = text;
+    this.valueDisplay.classList.remove('placeholder');
+
+    // Update selected state
+    this.options.forEach(opt => opt.classList.remove('selected'));
+    option.classList.add('selected');
+
+    // Trigger change event on hidden input
+    const event = new Event('change', { bubbles: true });
+    this.hiddenInput.dispatchEvent(event);
+
+    this.close();
+  }
+
+  highlightOption(index) {
+    this.clearHighlight();
+
+    if (index >= 0 && index < this.filteredOptions.length) {
+      this.highlightedIndex = index;
+      this.filteredOptions[index].classList.add('highlighted');
+      this.filteredOptions[index].scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  clearHighlight() {
+    this.options.forEach(opt => opt.classList.remove('highlighted'));
+  }
+
+  handleKeydown(e) {
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        if (this.highlightedIndex < this.filteredOptions.length - 1) {
+          this.highlightOption(this.highlightedIndex + 1);
+        }
+        break;
+
+      case 'ArrowUp':
+        e.preventDefault();
+        if (this.highlightedIndex > 0) {
+          this.highlightOption(this.highlightedIndex - 1);
+        }
+        break;
+
+      case 'Enter':
+        e.preventDefault();
+        if (this.highlightedIndex >= 0 && this.highlightedIndex < this.filteredOptions.length) {
+          this.selectOption(this.filteredOptions[this.highlightedIndex]);
+        }
+        break;
+
+      case 'Tab':
+        this.close();
+        break;
+    }
+  }
+
+  // Get current value
+  getValue() {
+    return this.hiddenInput.value;
+  }
+
+  // Set value programmatically
+  setValue(value) {
+    const option = Array.from(this.options).find(opt => opt.dataset.value === value);
+    if (option) {
+      this.selectOption(option);
+    }
+  }
+
+  // Reset to initial state
+  reset() {
+    this.hiddenInput.value = '';
+    this.valueDisplay.textContent = 'Select a state...';
+    this.valueDisplay.classList.add('placeholder');
+    this.options.forEach(opt => opt.classList.remove('selected'));
+  }
+}
+
 // Export to window for use in Liquid templates
 if (typeof window !== 'undefined') {
   window.MemorialStoriesAPI = MemorialStoriesAPI;
@@ -1361,6 +1599,7 @@ if (typeof window !== 'undefined') {
   window.StoryWallManager = StoryWallManager;
   window.ImageUploadManager = ImageUploadManager;
   window.StoryDetailManager = StoryDetailManager;
+  window.SearchableSelectManager = SearchableSelectManager;
 
   // Auto-initialize story wall if settings are present
   document.addEventListener('DOMContentLoaded', function() {
@@ -1375,6 +1614,11 @@ if (typeof window !== 'undefined') {
         maxFileSize: 5 * 1024 * 1024, // 5MB
         apiBaseUrl: window.MEMORIAL_SETTINGS?.apiBaseUrl
       });
+    }
+
+    // Auto-initialize searchable select for state field
+    if (document.getElementById('state-select-container')) {
+      window.stateSelectManager = new SearchableSelectManager('state-select-container');
     }
   });
 }

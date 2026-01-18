@@ -1977,26 +1977,171 @@
 }
 
 /* ===========================================================================
-   SEARCHABLE STATE INPUT (DATALIST)
+   SEARCHABLE SELECT (Select2-like dropdown)
    =========================================================================== */
 
-/* State input with datalist */
-input[list] {
+.memorial-searchable-select {
+  position: relative;
+  width: 100%;
+}
+
+.memorial-searchable-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border: 2px solid #151515;
+  border-radius: 2px;
+  background: #ffffff;
   cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 38px;
 }
 
-input[list]::-webkit-calendar-picker-indicator {
+.memorial-searchable-select-trigger:hover {
+  border-color: #000000;
+}
+
+.memorial-searchable-select-trigger.open {
+  border-color: #000000;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.memorial-searchable-select-value {
+  flex: 1;
+  font-size: 1rem;
+  color: #000000;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.memorial-searchable-select-value.placeholder {
+  color: #757575;
+}
+
+.memorial-searchable-select-arrow {
+  width: 20px;
+  height: 20px;
+  stroke: #000000;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.memorial-searchable-select-trigger.open .memorial-searchable-select-arrow {
+  transform: rotate(180deg);
+}
+
+.memorial-searchable-select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-top: none;
+  border-radius: 0 0 2px 2px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.memorial-searchable-select-search {
+  padding: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.memorial-searchable-select-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.memorial-searchable-select-input:focus {
+  border-color: #000000;
+}
+
+.memorial-searchable-select-options {
+  overflow-y: auto;
+  max-height: 230px;
+}
+
+.memorial-searchable-select-option {
+  padding: 10px 12px;
   cursor: pointer;
-  opacity: 0.6;
+  transition: background-color 0.15s ease;
+  font-size: 0.95rem;
+  color: #000000;
 }
 
-input[list]:hover::-webkit-calendar-picker-indicator {
-  opacity: 1;
+.memorial-searchable-select-option:hover {
+  background-color: #f5f5f5;
 }
 
-/* Add dropdown arrow indicator for searchable state field */
+.memorial-searchable-select-option.selected {
+  background-color: #e8e8e8;
+  font-weight: 600;
+}
 
-/* Remove default arrow in Firefox */
-#state::-moz-list-dropdown {
+.memorial-searchable-select-option.highlighted {
+  background-color: #f0f0f0;
+}
+
+.memorial-searchable-select-option.hidden {
   display: none;
+}
+
+.memorial-searchable-select-no-results {
+  padding: 12px;
+  text-align: center;
+  color: #757575;
+  font-size: 0.9rem;
+}
+
+/* Scrollbar styling for options */
+.memorial-searchable-select-options::-webkit-scrollbar {
+  width: 8px;
+}
+
+.memorial-searchable-select-options::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.memorial-searchable-select-options::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 4px;
+}
+
+.memorial-searchable-select-options::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+/* Overlay for closing dropdown when clicking outside */
+.memorial-searchable-select-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+}
+
+/* Mobile responsiveness for searchable select */
+@media (max-width: 768px) {
+  .memorial-searchable-select-dropdown {
+    max-height: 250px;
+  }
+
+  .memorial-searchable-select-options {
+    max-height: 190px;
+  }
+
+  .memorial-searchable-select-option {
+    padding: 12px;
+  }
 }

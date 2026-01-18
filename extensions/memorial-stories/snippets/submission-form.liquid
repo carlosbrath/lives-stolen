@@ -54,24 +54,29 @@
     </div>
     <div class="memorial-form-group">
       <label for="state">State *</label>
-      <input
-        type="text"
-        id="state"
-        name="state"
-        list="states-list"
-        placeholder="Type to search state..."
-        autocomplete="off"
-        required
-      >
-      <datalist id="states-list">
-        {% assign states_string = us_states | newline_to_br | split: '<br />' %}
-        {% for state in states_string %}
-          {% assign trimmed_state = state | strip %}
-          {% if trimmed_state != blank %}
-            <option value="{{ trimmed_state }}">
-          {% endif %}
-        {% endfor %}
-      </datalist>
+      <div class="memorial-searchable-select" id="state-select-container">
+        <input type="hidden" id="state" name="state" required>
+        <div class="memorial-searchable-select-trigger" id="state-select-trigger">
+          <span class="memorial-searchable-select-value" id="state-select-value">Select a state...</span>
+          <svg class="memorial-searchable-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+        <div class="memorial-searchable-select-dropdown" id="state-select-dropdown" style="display: none;">
+          <div class="memorial-searchable-select-search">
+            <input type="text" class="memorial-searchable-select-input" id="state-search-input" placeholder="Search states..." autocomplete="off">
+          </div>
+          <div class="memorial-searchable-select-options" id="state-options-list">
+            {% assign states_string = us_states | newline_to_br | split: '<br />' %}
+            {% for state in states_string %}
+              {% assign trimmed_state = state | strip %}
+              {% if trimmed_state != blank %}
+                <div class="memorial-searchable-select-option" data-value="{{ trimmed_state }}">{{ trimmed_state }}</div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
