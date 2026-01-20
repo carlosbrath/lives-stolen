@@ -50,7 +50,7 @@
 
 .memorial-wall-description {
   margin: 0 0 32px 0;
-  font-size: 1.1rem;
+  font-size: 1.8rem;
   color: #333333;
   line-height: 1.6;
   max-width: 900px;
@@ -510,7 +510,7 @@
 .memorial-form-group label {
   margin-bottom: 8px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1.2rem;
   color: #000000;
 }
 *:focus-visible {
@@ -766,7 +766,7 @@
   }
 
   .memorial-wall-description {
-    font-size: 1rem;
+    font-size: 1.8rem;
   }
 
   .memorial-stats-container {
@@ -1460,7 +1460,7 @@
 
 .story-detail-relation {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1.525rem;
   font-weight: 600;
   color: #111827;
   line-height: 1.5;
@@ -1468,7 +1468,7 @@
 
 .story-detail-location {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.5rem;
   color: #111827;
   line-height: 1.5;
   font-weight: 400;
@@ -1476,7 +1476,7 @@
 
 .story-detail-date {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: #111827;
   line-height: 1.5;
@@ -1484,7 +1484,7 @@
 
 .story-detail-category {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.5rem;
   color: #4b5563;
   line-height: 1.5;
 }
@@ -1830,7 +1830,7 @@
 }
 
 .memorial-stat-number {
-  font-size: 3rem;
+  font-size: 5rem;
   font-weight: 900;
   color: #dc2626;
   margin-bottom: 0px;
@@ -1848,8 +1848,8 @@
 /* Story Section Layout */
 .memorial-story-section {
   margin-bottom: 60px;
-  padding-top: 40px;
-  scroll-margin-top: 20px;
+  padding-top: 65px;
+  scroll-margin-top: 45px;
 }
 
 .memorial-story-section:first-of-type {
@@ -1905,7 +1905,7 @@
   }
 
   .memorial-stat-number {
-    font-size: 3rem;
+    font-size: 5rem;
   }
 
   .memorial-stat-label {
@@ -1935,7 +1935,7 @@
   }
 
   .memorial-stat-number {
-    font-size: 2rem;
+    font-size: 4rem;
   }
 
   .memorial-stat-label {
@@ -1963,7 +1963,7 @@
 
 @media (max-width: 480px) {
   .memorial-stat-number {
-    font-size: 2rem;
+    font-size: 3rem;
   }
 
   .memorial-stat-label {
