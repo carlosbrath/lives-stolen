@@ -450,7 +450,7 @@
 
 .memorial-form-section-header {
   max-width: 900px;
-  margin: 0 auto 40px;
+  margin: 0 auto 16px;
   text-align: left;
 }
 
@@ -464,10 +464,12 @@
 }
 
 .memorial-form-section-subtitle {
-  font-size: 1.15rem;
-  color: #cccccc;
-  margin: 0;
-  line-height: 1.5;
+      font-size: 1.8rem;
+    color: #e0dada;
+    font-weight: 600 !important;
+    margin: 0;
+    line-height: 1.5;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .memorial-form-container-wrapper {
@@ -510,7 +512,7 @@
 .memorial-form-group label {
   margin-bottom: 8px;
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   color: #000000;
 }
 *:focus-visible {
@@ -1812,7 +1814,7 @@
 /* 3-Column Stats Layout */
 .memorial-stats-3-col {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1.3fr 1.8fr;
   gap: 24px;
   margin-top: 32px;
 }
@@ -1833,16 +1835,15 @@
   font-size: 5rem;
   font-weight: 900;
   color: #dc2626;
-  margin-bottom: 0px;
+  margin-bottom: -22px;
   font-family: 'Clab', "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .memorial-stat-subtitle {
   margin: 8px 0 0 0;
-  font-size: 0.9rem;
-  color: #666666;
+  font-size: 1.5rem;
   line-height: 1.4;
-  font-family: 'Clab', "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* Story Section Layout */
@@ -1898,7 +1899,7 @@
 /* Responsive - 3-Column Stats */
 @media (max-width: 1024px) {
   .memorial-stats-3-col {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr 1.3fr 1.8fr;
   }
   .memorial-stats-4-col {
     grid-template-columns: repeat(4, 1fr);
