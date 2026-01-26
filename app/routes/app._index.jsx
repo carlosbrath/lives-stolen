@@ -90,11 +90,11 @@ export default function Index() {
   };
 
   const goToStoriesPage = () => {
-    window.open("/stories", "_blank");
+    window.open("https://www.thewhiteline.org/pages/memorial-wall", "_blank");
   };
 
   const goToSubmitForm = () => {
-    window.open("/submit-story", "_blank");
+    window.open("https://www.thewhiteline.org/pages/memorial-wall#submit-story", "_blank");
   };
 
   return (
