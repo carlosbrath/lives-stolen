@@ -257,7 +257,7 @@ a {
 
 .memorial-section-header-content {
   display: flex;
-  align-items: center;
+  align-items: end;
   gap: var(--spacing-md);
   flex: 1;
 }
@@ -277,6 +277,7 @@ a {
   font-family: var(--font-secondary);
   margin: 0;
   color: var(--color-text-secondary);
+  margin-bottom: 3px;
 }
 
 /* ===========================================================================
@@ -1736,6 +1737,9 @@ a {
 
   .story-detail-story-section {
     padding: 0 20px var(--spacing-xl);
+  }
+  .memorial-filter-toggle-button {
+    margin-left: 100px;
   }
 }
 
