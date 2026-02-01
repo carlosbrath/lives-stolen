@@ -1,165 +1,79 @@
-import { json } from "@remix-run/node";
 import { uploadFilesToShopify } from "../utils/fileUpload.server";
 import { rateLimitByIp } from "../utils/rateLimit.server";
+import { handleCors, jsonResponse, errorResponse, corsHeaders } from "../utils/api.server";
 
-// CORS headers for cross-origin requests from Shopify storefronts
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+const MAX_FILES = 10;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-/**
- * Upload files to Shopify Files API
- * This endpoint is public (no auth required) but rate-limited
- *
- * Request format:
- * - Content-Type: multipart/form-data
- * - shop: string (required) - Shop domain
- * - files: File[] (required, max 10) - Image files to upload
- *
- * Response format:
- * - success: boolean
- * - urls: string[] - Array of CDN URLs
- * - uploadedCount: number - Number of files uploaded
- *
- * Error codes:
- * - MISSING_SHOP: Shop domain not provided
- * - SHOP_NOT_FOUND: Shop doesn't have app installed or session invalid
- * - NO_FILES: No files in request
- * - TOO_MANY_FILES: More than 10 files
- * - INVALID_FILE_TYPE: Non-image file type
- * - FILE_TOO_LARGE: File exceeds 10MB limit
- * - UPLOAD_FAILED: Shopify upload failed
- */
 export async function action({ request }) {
-  // Handle CORS preflight
-  if (request.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
-  }
+  const corsResponse = handleCors(request);
+  if (corsResponse) return corsResponse;
 
   if (request.method !== "POST") {
-    return json(
-      { success: false, error: "Method not allowed", code: "METHOD_NOT_ALLOWED" },
-      { status: 405, headers: corsHeaders }
-    );
+    return errorResponse("Method not allowed", 405, "METHOD_NOT_ALLOWED");
   }
+
   try {
-    // Rate limiting: 30 uploads per hour per IP
-    const rateLimitResponse = rateLimitByIp(request, {
+    // Rate limiting: 300 uploads per hour per IP
+    const rateLimited = rateLimitByIp(request, {
       maxRequests: 300,
-      windowMs: 60 * 60 * 1000, // 1 hour
+      windowMs: 60 * 60 * 1000,
       message: "Too many upload requests. Please try again later.",
     });
 
-    if (rateLimitResponse) {
-      return new Response(rateLimitResponse.body, {
+    if (rateLimited) {
+      return new Response(rateLimited.body, {
         status: 429,
-        headers: { ...corsHeaders, ...Object.fromEntries(rateLimitResponse.headers) },
+        headers: { ...corsHeaders, ...Object.fromEntries(rateLimited.headers) },
       });
     }
 
-    // Parse multipart form data
     const formData = await request.formData();
-
-    // Extract shop domain
     const shop = formData.get("shop");
-    console.log(`[DEBUG API] Received shop parameter: "${shop}"`);
-
-    if (!shop) {
-      return json(
-        {
-          success: false,
-          error: "Shop domain is required",
-          code: "MISSING_SHOP",
-        },
-        { status: 400, headers: corsHeaders }
-      );
-    }
-    
-    // Extract files
     const files = formData.getAll("files");
+
+    // Validate shop
+    if (!shop) {
+      return errorResponse("Shop domain is required", 400, "MISSING_SHOP");
+    }
+
+    // Validate files
     if (files.length === 0) {
-      return json(
-        {
-          success: false,
-          error: "No files provided",
-          code: "NO_FILES",
-        },
-        { status: 400, headers: corsHeaders }
-      );
+      return errorResponse("No files provided", 400, "NO_FILES");
     }
-    // Validate file count (max 10)
-    if (files.length > 10) {
-      return json(
-        {
-          success: false,
-          error: "Maximum 10 files allowed per upload",
-          code: "TOO_MANY_FILES",
-        },
-        { status: 400, headers: corsHeaders }
-      );
+
+    if (files.length > MAX_FILES) {
+      return errorResponse(`Maximum ${MAX_FILES} files allowed per upload`, 400, "TOO_MANY_FILES");
     }
-    // Validate file types and sizes (basic check before detailed validation)
+
+    // Validate each file
     for (const file of files) {
-      if (!file.type || !file.type.startsWith("image/")) {
-        return json(
-          {
-            success: false,
-            error: `Invalid file type: ${file.type}. Only image files are allowed.`,
-            code: "INVALID_FILE_TYPE",
-          },
-          { status: 400, headers: corsHeaders }
-        );
+      if (!file.type?.startsWith("image/")) {
+        return errorResponse(`Invalid file type: ${file.type}. Only images allowed.`, 400, "INVALID_FILE_TYPE");
       }
 
-      // 10MB limit per file
-      if (file.size > 10 * 1024 * 1024) {
-        return json(
-          {
-            success: false,
-            error: `File "${file.name}" is too large (${(file.size / 1024 / 1024).toFixed(2)}MB). Maximum size is 10MB.`,
-            code: "FILE_TOO_LARGE",
-          },
-          { status: 400, headers: corsHeaders }
+      if (file.size > MAX_FILE_SIZE) {
+        return errorResponse(
+          `File "${file.name}" exceeds 10MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)`,
+          400,
+          "FILE_TOO_LARGE"
         );
       }
     }
-    // Upload to Shopify Files API
+
     const urls = await uploadFilesToShopify(shop, files);
 
-    return json(
-      {
-        success: true,
-        urls,
-        uploadedCount: urls.length,
-      },
-      { status: 200, headers: corsHeaders }
-    );
-
+    return jsonResponse({
+      success: true,
+      urls,
+      uploadedCount: urls.length,
+    });
   } catch (error) {
-    // Determine error code based on error message
-    let errorCode = "UPLOAD_FAILED";
-    let statusCode = 500;
-
-    if (error.message.includes("Shop") && error.message.includes("not found")) {
-      errorCode = "SHOP_NOT_FOUND";
-      statusCode = 403;
-    } else if (error.message.includes("session")) {
-      errorCode = "SESSION_EXPIRED";
-      statusCode = 403;
-    } else if (error.message.includes("validation")) {
-      errorCode = "VALIDATION_ERROR";
-      statusCode = 400;
-    }
-
-    return json(
-      {
-        success: false,
-        error: error.message || "Upload failed. Please try again.",
-        code: errorCode,
-      },
-      { status: statusCode, headers: corsHeaders }
+    const isShopError = error.message.includes("Shop") || error.message.includes("session");
+    return errorResponse(
+      error.message || "Upload failed. Please try again.",
+      isShopError ? 403 : 500,
+      isShopError ? "SHOP_NOT_FOUND" : "UPLOAD_FAILED"
     );
   }
 }

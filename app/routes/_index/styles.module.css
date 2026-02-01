@@ -60,62 +60,10 @@
   font-size: 1.15rem;
   color: #999999;
   line-height: 1.8;
-  margin: 0 0 40px 0;
+  margin: 0;
   max-width: 700px;
   margin-left: auto;
   margin-right: auto;
-}
-
-.heroButtons {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.primaryButton {
-  display: inline-block;
-  padding: 16px 40px;
-  background: #ffffff;
-  color: #000000;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
-  border: 2px solid #ffffff;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.primaryButton:hover {
-  background: transparent;
-  color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2);
-}
-
-.secondaryButton {
-  display: inline-block;
-  padding: 16px 40px;
-  background: transparent;
-  color: #ffffff;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
-  border: 2px solid #ffffff;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.secondaryButton:hover {
-  background: #ffffff;
-  color: #000000;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2);
 }
 
 /* Features Section */
@@ -191,53 +139,31 @@
   margin: 0;
 }
 
-/* Call to Action Section */
-.ctaSection {
-  background: #000000;
-  padding: 80px 20px;
+/* Info Section */
+.infoSection {
+  background: #f8f9fa;
+  padding: 60px 20px;
   text-align: center;
+  border-top: 1px solid #e9ecef;
 }
 
-.ctaContent {
-  max-width: 800px;
+.infoContent {
+  max-width: 700px;
   margin: 0 auto;
 }
 
-.ctaTitle {
-  font-size: 2.5rem;
-  font-weight: 900;
-  color: #ffffff;
-  margin: 0 0 16px 0;
-  line-height: 1.2;
-}
-
-.ctaDescription {
-  font-size: 1.15rem;
-  color: #cccccc;
-  margin: 0 0 32px 0;
-  line-height: 1.6;
-}
-
-.ctaButton {
-  display: inline-block;
-  padding: 16px 48px;
-  background: #ffffff;
-  color: #000000;
-  text-decoration: none;
-  border-radius: 8px;
+.infoTitle {
+  font-size: 1.75rem;
   font-weight: 700;
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
-  border: 2px solid #ffffff;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  color: #333333;
+  margin: 0 0 16px 0;
 }
 
-.ctaButton:hover {
-  background: transparent;
-  color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255, 255, 255, 0.3);
+.infoDescription {
+  font-size: 1.1rem;
+  color: #666666;
+  margin: 0;
+  line-height: 1.7;
 }
 
 /* Admin Section */
@@ -300,6 +226,196 @@
   transform: translateY(-1px);
 }
 
+/* API Test Section */
+.apiSection {
+  padding: 80px 20px;
+  background: #1a1a1a;
+}
+
+.apiContent {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.apiTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+  text-align: center;
+}
+
+.apiDescription {
+  color: #999999;
+  text-align: center;
+  margin: 0 0 30px 0;
+}
+
+.apiControls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.select {
+  padding: 10px 16px;
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: #2a2a2a;
+  color: #ffffff;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #666;
+}
+
+.fetchButton {
+  padding: 10px 24px;
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fetchButton:hover:not(:disabled) {
+  background: #e0e0e0;
+  transform: translateY(-1px);
+}
+
+.fetchButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.errorMessage {
+  background: #ff4444;
+  color: #ffffff;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.statsBar {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  padding: 16px;
+  background: #2a2a2a;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.statsBar span {
+  color: #cccccc;
+  font-size: 0.95rem;
+}
+
+.storiesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.storyCard {
+  background: #2a2a2a;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.storyCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.storyImage {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.storyContent {
+  padding: 20px;
+}
+
+.storyName {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+}
+
+.storyMeta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: #999999;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badgeFatal {
+  background: #8b0000;
+  color: #ffffff;
+}
+
+.badgeNonFatal {
+  background: #b8860b;
+  color: #ffffff;
+}
+
+.storyDescription {
+  color: #cccccc;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+}
+
+.storyFooter {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #777777;
+  padding-top: 12px;
+  border-top: 1px solid #3a3a3a;
+}
+
+.storyCategory {
+  background: #3a3a3a;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.storyDate {
+  color: #666666;
+}
+
+.noStories {
+  text-align: center;
+  color: #666666;
+  padding: 40px;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .heroTitle {
@@ -314,9 +430,6 @@
     font-size: 2.5rem;
   }
 
-  .ctaTitle {
-    font-size: 2rem;
-  }
 }
 
 @media (max-width: 768px) {
@@ -336,17 +449,6 @@
 
   .heroDescription {
     font-size: 1rem;
-  }
-
-  .heroButtons {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .primaryButton,
-  .secondaryButton {
-    width: 100%;
-    max-width: 320px;
   }
 
   .featuresSection {
@@ -380,21 +482,24 @@
     font-size: 1.3rem;
   }
 
-  .ctaSection {
+  .infoSection {
+    padding: 50px 16px;
+  }
+
+  .infoTitle {
+    font-size: 1.5rem;
+  }
+
+  .apiSection {
     padding: 60px 16px;
   }
 
-  .ctaTitle {
+  .apiTitle {
     font-size: 1.75rem;
   }
 
-  .ctaDescription {
-    font-size: 1rem;
-  }
-
-  .ctaButton {
-    width: 100%;
-    max-width: 320px;
+  .storiesGrid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -423,12 +528,8 @@
     grid-template-columns: 1fr;
   }
 
-  .ctaSection {
-    padding: 50px 12px;
-  }
-
-  .ctaTitle {
-    font-size: 1.5rem;
+  .infoSection {
+    padding: 40px 12px;
   }
 
   .form {
@@ -442,5 +543,24 @@
 
   .button {
     width: 100%;
+  }
+
+  .apiSection {
+    padding: 50px 12px;
+  }
+
+  .apiControls {
+    flex-direction: column;
+  }
+
+  .select,
+  .fetchButton {
+    width: 100%;
+  }
+
+  .statsBar {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
   }
 }

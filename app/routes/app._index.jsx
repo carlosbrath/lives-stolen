@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useFetcher, useNavigate, useLoaderData } from "@remix-run/react";
-import { redirect, json } from "@remix-run/node";
 import {
   Page,
   Layout,
@@ -27,29 +26,17 @@ export const loader = async ({ request }) => {
   return { shop: session.shop };
 };
 
-export const action = async ({ request }) => {
-  const { session } = await authenticate.admin(request);
-  const formData = await request.formData();
-  const intent = formData.get("intent");
-
-  if (intent === "refresh-permissions") {
-    // Redirect to refresh-scopes endpoint
-    return redirect(`/api/refresh-scopes?shop=${session.shop}`);
-  }
-
-  return null;
-};
+// No action needed - refresh permissions uses direct navigation
 
 export default function Index() {
   const { shop } = useLoaderData();
   const setupFetcher = useFetcher();
-  const refreshFetcher = useFetcher();
   const shopify = useAppBridge();
   const navigate = useNavigate();
   const [setupComplete, setSetupComplete] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const isSettingUp = setupFetcher.state === "submitting" || setupFetcher.state === "loading";
-  const isRefreshing = refreshFetcher.state === "submitting" || refreshFetcher.state === "loading";
 
   useEffect(() => {
     if (setupFetcher.data?.success) {
@@ -64,12 +51,6 @@ export default function Index() {
     }
   }, [setupFetcher.data, shopify]);
 
-  useEffect(() => {
-    if (refreshFetcher.state === "loading") {
-      shopify.toast.show("Refreshing app permissions...");
-    }
-  }, [refreshFetcher.state, shopify]);
-
   const runSetup = () => {
     setupFetcher.submit({}, {
       method: "POST",
@@ -78,23 +59,28 @@ export default function Index() {
   };
 
   const refreshPermissions = () => {
-    // Use fetcher to submit action that will redirect to refresh-scopes
-    refreshFetcher.submit(
-      { intent: "refresh-permissions" },
-      { method: "POST" }
-    );
+    console.log("refreshPermissions clicked, shop:", shop); // Debug
+    // Navigate directly to refresh-scopes endpoint (full page navigation for OAuth)
+    setIsRefreshing(true);
+    shopify.toast.show("Refreshing app permissions...");
+    // Use window.location for full page redirect to trigger OAuth flow
+    window.location.href = `/api/refresh-scopes?shop=${shop}`;
   };
 
   const goToSubmissions = () => {
+    console.log("goToSubmissions clicked"); // Debug
     navigate("/app/submissions");
   };
 
   const goToStoriesPage = () => {
-    window.open("https://www.thewhiteline.org/pages/memorial-wall", "_blank");
+    console.log("goToStoriesPage clicked"); // Debug
+    // Use window.open with noopener for external links in embedded apps
+    window.open("https://www.thewhiteline.org/pages/memorial-wall", "_blank", "noopener,noreferrer");
   };
 
   const goToSubmitForm = () => {
-    window.open("https://www.thewhiteline.org/pages/memorial-wall#submit-story", "_blank");
+    console.log("goToSubmitForm clicked"); // Debug
+    window.open("https://www.thewhiteline.org/pages/memorial-wall#submit-story", "_blank", "noopener,noreferrer");
   };
 
   return (

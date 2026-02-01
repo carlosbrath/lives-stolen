@@ -10,7 +10,7 @@ node_modules
 /prisma/dev.sqlite
 /prisma/dev.sqlite-journal
 database.sqlite
-
+shopify.app.storywall.toml
 FLY_DEPLOYMENT.md
 .env
 .env.*

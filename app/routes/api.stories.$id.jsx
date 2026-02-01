@@ -1,18 +1,14 @@
-import { json } from "@remix-run/node";
 import prisma from "../db.server";
-
-// CORS headers for cross-origin requests from Shopify storefronts
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+import {
+  handleCors,
+  jsonResponse,
+  errorResponse,
+  toStoryFormat,
+} from "../utils/api.server";
 
 export async function loader({ params, request }) {
-  // Handle CORS preflight
-  if (request.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
-  }
+  const corsResponse = handleCors(request);
+  if (corsResponse) return corsResponse;
 
   try {
     const submission = await prisma.submission.findUnique({
@@ -20,36 +16,12 @@ export async function loader({ params, request }) {
     });
 
     if (!submission) {
-      return json(
-        { error: "Story not found" },
-        { status: 404, headers: corsHeaders }
-      );
+      return errorResponse("Story not found", 404, "NOT_FOUND");
     }
 
-    const story = {
-      id: submission.id,
-      title: submission.shortTitle,
-      victimName: submission.victimName,
-      category: submission.roadUserType,
-      state: submission.state,
-      date: submission.incidentDate,
-      status: submission.status,
-      age: submission.age,
-      gender: submission.gender,
-      injuryType: submission.injuryType,
-      year: new Date(submission.incidentDate).getFullYear().toString(),
-      images: submission.photoUrls ? JSON.parse(submission.photoUrls) : [],
-      description: submission.victimStory,
-      relation: submission.relation,
-      submitterName: submission.submitterName,
-    };
-
-    return json({ story }, { headers: corsHeaders });
+    return jsonResponse({ story: toStoryFormat(submission) });
   } catch (error) {
     console.error("Error fetching story:", error);
-    return json(
-      { error: "Failed to fetch story" },
-      { status: 500, headers: corsHeaders }
-    );
+    return errorResponse("Failed to fetch story", 500, "FETCH_ERROR");
   }
 }

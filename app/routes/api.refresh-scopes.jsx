@@ -41,7 +41,7 @@ export async function loader({ request }) {
     console.log(`✅ Deleted ${deleted.count} session(s) for ${normalizedShop}`);
 
     // Redirect to OAuth flow - this will create new session with updated scopes
-    return redirect(`/api/auth?shop=${normalizedShop}`);
+    return redirect(`/auth?shop=${normalizedShop}`);
 
   } catch (error) {
     return json({

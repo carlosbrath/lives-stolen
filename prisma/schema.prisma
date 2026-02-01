@@ -1,18 +1,12 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
-// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
-// enough when changing adapters.
-// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// Session model for Shopify OAuth sessions
 model Session {
   id            String    @id
   shop          String
@@ -31,52 +25,34 @@ model Session {
   emailVerified Boolean?  @default(false)
 }
 
-// Submission model for public story submissions
-// Flow: Public form → SQLite → Admin reviews → Shopify Metaobjects
 model Submission {
-  id                    String    @id @default(cuid())
-  shop                  String    @default("public")
+  id                  String    @id @default(uuid())
+  shop                String    @default("public")
+  submitterName       String
+  submitterEmail      String
+  victimName          String?
+  relation            String?
+  age                 Int?
+  gender              String?
+  incidentDate        String
+  state               String
+  roadUserType        String
+  injuryType          String
+  shortTitle          String
+  victimStory         String
+  photoUrls           String?
+  metaobjectId        String?
+  status              String    @default("pending")
+  adminNotes          String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  publishedAt         DateTime?
+  interestedInContact Boolean?
+  zipCode             String?
 
-  // Submitter info
-  submitterName         String
-  submitterEmail        String
-
-  // Victim info
-  victimName            String?
-  relation              String?
-  age                   Int?
-  gender                String?
-
-  // Incident info
-  incidentDate          String
-  state                 String
-  zipCode               String?
-  roadUserType          String
-  injuryType            String
-
-  // Story content
-  shortTitle            String
-  victimStory           String
-  interestedInContact   Boolean?
-
-  // Files & media
-  photoUrls             String?   // JSON array of photo URLs
-
-  // Shopify integration
-  metaobjectId          String?   // Shopify metaobject ID (after approval)
-
-  // Status tracking
-  status                String    @default("pending")
-  adminNotes            String?
-
-  // Timestamps
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  publishedAt           DateTime?
-
-  @@index([shop])
-  @@index([status])
   @@index([createdAt])
-  @@index([state])
   @@index([roadUserType])
+  @@index([shop])
+  @@index([state])
+  @@index([status])
 }
