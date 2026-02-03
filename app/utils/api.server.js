@@ -51,16 +51,31 @@ export function toStoryFormat(sub) {
   };
 }
 
-// Parse photo URLs (handles both JSON string and array)
+// Parse photo URLs (handles both JSON string and array, extracts URL from object format)
 export function parsePhotoUrls(photoUrls) {
   if (!photoUrls) return [];
-  if (Array.isArray(photoUrls)) return photoUrls;
 
-  try {
-    return JSON.parse(photoUrls);
-  } catch {
-    return [];
+  let parsed;
+  if (Array.isArray(photoUrls)) {
+    parsed = photoUrls;
+  } else {
+    try {
+      parsed = JSON.parse(photoUrls);
+    } catch {
+      return [];
+    }
   }
+
+  if (!Array.isArray(parsed)) return [];
+
+  // Handle both object format {originalUrl, currentUrl} and plain string URL format
+  return parsed.map((item) => {
+    if (typeof item === "string") {
+      return item;
+    }
+    // Return currentUrl if it exists (edited/cropped image), otherwise originalUrl
+    return item.currentUrl || item.originalUrl || "";
+  }).filter(Boolean);
 }
 
 // Age range to numeric value mapping

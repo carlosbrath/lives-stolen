@@ -105,6 +105,19 @@ class MemorialStoriesAPI {
  */
 const MemorialStoriesUtils = {
   /**
+   * Extract URL from image data (handles both string URLs and object format)
+   * Object format: { originalUrl: "url", currentUrl: "edited_url", order: 0 }
+   */
+  getImageUrl(image) {
+    if (!image) return '';
+    if (typeof image === 'string') {
+      return image;
+    }
+    // Handle object format from admin image updates
+    return image.currentUrl || image.originalUrl || '';
+  },
+
+  /**
    * Format date string
    */
   formatDate(dateString) {
@@ -138,7 +151,7 @@ const MemorialStoriesUtils = {
     // Get first image URL or use default avatar
     const apiBaseUrl = window.MEMORIAL_CONFIG?.apiBaseUrl || window.MEMORIAL_SETTINGS?.apiBaseUrl || 'https://stories-app.fly.dev';
     const hasImages = images.length > 0;
-    const imageUrl = hasImages ? images[0] : `${apiBaseUrl}/Avatar-default.png`;
+    const imageUrl = hasImages ? MemorialStoriesUtils.getImageUrl(images[0]) : `${apiBaseUrl}/Avatar-default.png`;
 
     return `
       <a href="${linkPrefix}?id=${story.id}" class="memorial-card" data-story-id="${story.id}">
@@ -253,6 +266,11 @@ class StoryWallManager {
     this.api = new MemorialStoriesAPI(config.apiBaseUrl || 'https://stories-app.fly.dev');
     this.allStories = [];
 
+    // Get responsive display count (3 for mobile, 6 for desktop)
+    this.getDisplayCount = () => {
+      return window.innerWidth <= 768 ? 3 : 6;
+    };
+
     // Configuration for 3 sections
     this.sections = {
       'Fatal': {
@@ -260,7 +278,7 @@ class StoryWallManager {
         gridId: 'lives-stolen-grid',
         filterId: 'lives-stolen-filter',
         seeAllId: 'lives-stolen-see-all',
-        displayCount: 18, // 3 rows x 6 columns
+        get displayCount() { return window.innerWidth <= 768 ? 3 : 6; },
         showAll: false,
         filters: {
           roadUserType: [],
@@ -276,7 +294,7 @@ class StoryWallManager {
         gridId: 'lives-shattered-grid',
         filterId: 'lives-shattered-filter',
         seeAllId: 'lives-shattered-see-all',
-        displayCount: 18,
+        get displayCount() { return window.innerWidth <= 768 ? 3 : 6; },
         showAll: false,
         filters: {
           roadUserType: [],
@@ -292,7 +310,7 @@ class StoryWallManager {
         gridId: 'lives-changed-grid',
         filterId: 'lives-changed-filter',
         seeAllId: 'lives-changed-see-all',
-        displayCount: 18,
+        get displayCount() { return window.innerWidth <= 768 ? 3 : 6; },
         showAll: false,
         filters: {
           roadUserType: [],
@@ -312,6 +330,15 @@ class StoryWallManager {
     await this.loadStories();
     this.setupEventListeners();
     this.renderAllSections();
+
+    // Re-render on resize to update display count
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        this.renderAllSections();
+      }, 250);
+    });
   }
 
   async loadStories() {
@@ -993,7 +1020,12 @@ class StoryDetailManager {
       images = [];
     }
 
-    this.images = images.length > 0 ? images : [`${this.apiBaseUrl}/Avatar-default.png`];
+    // Extract URLs from images (handles both string URLs and object format)
+    const imageUrls = images
+      .map(img => MemorialStoriesUtils.getImageUrl(img))
+      .filter(url => url && url.length > 0);
+
+    this.images = imageUrls.length > 0 ? imageUrls : [`${this.apiBaseUrl}/Avatar-default.png`];
   }
 
   showLoading() {
@@ -1127,44 +1159,65 @@ class StoryDetailManager {
 
   renderStoryInfo(formattedDate, actionLabel) {
     return `
-      ${this.story.relation ? `
-        <p class="story-detail-relation">${this.story.relation}</p>
-      ` : ''}
+      <div class="story-detail-info-list">
+        ${this.story.relation ? `
+          <div class="story-detail-info-item">
+            <span class="story-detail-info-label">Submitted by</span>
+            <span class="story-detail-info-value">${this.story.relation}</span>
+          </div>
+        ` : ''}
 
-      ${this.story.state ? `
-        <p class="story-detail-location">${this.story.state}</p>
-      ` : ''}
+        ${this.story.state ? `
+          <div class="story-detail-info-item">
+            <span class="story-detail-info-label">Location</span>
+            <span class="story-detail-info-value">${this.story.state}</span>
+          </div>
+        ` : ''}
 
-      ${this.story.date ? `
-        <p class="story-detail-date">${actionLabel} ${formattedDate}</p>
-      ` : ''}
+        ${this.story.date ? `
+          <div class="story-detail-info-item">
+            <span class="story-detail-info-label">Date</span>
+            <span class="story-detail-info-value">${actionLabel} ${formattedDate}</span>
+          </div>
+        ` : ''}
 
-      ${this.story.category ? `
-        <p class="story-detail-category">${this.story.category}</p>
-      ` : ''}
+        ${this.story.category ? `
+          <div class="story-detail-info-item">
+            <span class="story-detail-info-label">Road User Type</span>
+            <span class="story-detail-info-value">${this.story.category}</span>
+          </div>
+        ` : ''}
+      </div>
 
       <!-- Share Buttons -->
       <div class="story-detail-share-buttons">
         <button class="story-detail-share-button" id="share-facebook" aria-label="Share on Facebook">
-          <svg width="26" height="44" viewBox="0 0 26 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M24 2H18C15.3478 2 12.8043 3.05357 10.9289 4.92893C9.05357 6.8043 8 9.34784 8 12V18H2V26H8V42H16V26H22L24 18H16V12C16 11.4696 16.2107 10.9609 16.5858 10.5858C16.9609 10.2107 17.4696 10 18 10H24V2Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3V2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
+        </button>
 
+        <button class="story-detail-share-button" id="share-instagram" aria-label="Share on Instagram">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
+            <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor"/>
+          </svg>
         </button>
 
         <button class="story-detail-share-button" id="share-linkedin" aria-label="Share on LinkedIn">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M32 16C35.1826 16 38.2348 17.2643 40.4853 19.5147C42.7357 21.7652 44 24.8174 44 28V42H36V28C36 26.9391 35.5786 25.9217 34.8284 25.1716C34.0783 24.4214 33.0609 24 32 24C30.9391 24 29.9217 24.4214 29.1716 25.1716C28.4214 25.9217 28 26.9391 28 28V42H20V28C20 24.8174 21.2643 21.7652 23.5147 19.5147C25.7652 17.2643 28.8174 16 32 16Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M12 18H4V42H12V18Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M8 12C10.2091 12 12 10.2091 12 8C12 5.79086 10.2091 4 8 4C5.79086 4 4 5.79086 4 8C4 10.2091 5.79086 12 8 12Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="2" y="9" width="4" height="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="4" cy="4" r="2" stroke="currentColor" stroke-width="2"/>
           </svg>
         </button>
 
         <button class="story-detail-share-button" id="share-copy" aria-label="Copy link">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10 30H8C6.93913 30 5.92172 29.5786 5.17157 28.8284C4.42143 28.0783 4 27.0609 4 26V8C4 6.93913 4.42143 5.92172 5.17157 5.17157C5.92172 4.42143 6.93913 4 8 4H26C27.0609 4 28.0783 4.42143 28.8284 5.17157C29.5786 5.92172 30 6.93913 30 8V10M22 18H40C42.2091 18 44 19.7909 44 22V40C44 42.2091 42.2091 44 40 44H22C19.7909 44 18 42.2091 18 40V22C18 19.7909 19.7909 18 22 18Z" stroke="#1E1E1E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-
         </button>
 
         <button class="story-detail-share-button" id="share-more" aria-label="Share">
@@ -1226,12 +1279,17 @@ class StoryDetailManager {
 
     // Share buttons (always available)
     const facebookBtn = document.getElementById('share-facebook');
+    const instagramBtn = document.getElementById('share-instagram');
     const linkedinBtn = document.getElementById('share-linkedin');
     const copyBtn = document.getElementById('share-copy');
     const moreBtn = document.getElementById('share-more');
 
     if (facebookBtn) {
       facebookBtn.addEventListener('click', () => this.shareStory('facebook'));
+    }
+
+    if (instagramBtn) {
+      instagramBtn.addEventListener('click', () => this.shareStory('instagram'));
     }
 
     if (linkedinBtn) {
@@ -1304,6 +1362,20 @@ class StoryDetailManager {
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
       twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`,
     };
+
+    // Instagram doesn't support direct URL sharing, copy link and open Instagram
+    if (platform === 'instagram') {
+      this.copyLink().then(() => {
+        // Open Instagram app or website
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+          window.open('instagram://app', '_blank');
+        } else {
+          window.open('https://www.instagram.com/', '_blank');
+        }
+      });
+      return;
+    }
 
     if (urls[platform]) {
       window.open(urls[platform], '_blank', 'width=600,height=400');

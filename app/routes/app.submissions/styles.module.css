@@ -908,8 +908,71 @@
 .cropControls {
   padding: 16px 20px;
   border-top: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
+.controlLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+  min-width: 50px;
+}
+
+/* Rotation Controls */
+.rotationControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rotationButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rotateButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #f1f5f9;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #334155;
+  transition: all 0.15s;
+}
+
+.rotateButton:hover:not(:disabled) {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #111;
+}
+
+.rotateButton:active:not(:disabled) {
+  background: #111;
+  border-color: #111;
+  color: #fff;
+}
+
+.rotateButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rotationValue {
+  min-width: 45px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Zoom Control */
 .zoomLabel {
   display: flex;
   align-items: center;

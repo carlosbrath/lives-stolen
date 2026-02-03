@@ -45,16 +45,18 @@ const STATUS_COLORS = {
   rejected: "#e53e3e",
 };
 
-// Normalize photo URLs to consistent format
+// Normalize photo URLs to simple string array
 function normalizePhotoUrls(photoUrlsRaw) {
   if (!photoUrlsRaw) return [];
   const parsed = typeof photoUrlsRaw === "string" ? JSON.parse(photoUrlsRaw) : photoUrlsRaw;
   if (!Array.isArray(parsed)) return [];
 
-  if (parsed.length > 0 && typeof parsed[0] === "object" && "originalUrl" in parsed[0]) {
-    return parsed;
-  }
-  return parsed.map((url, index) => ({ originalUrl: url, currentUrl: null, order: index }));
+  // Handle both old object format and new string format
+  return parsed.map((item) => {
+    if (typeof item === "string") return item;
+    // Convert old object format to string URL
+    return item.currentUrl || item.originalUrl || "";
+  }).filter(Boolean);
 }
 
 // Loader
@@ -490,7 +492,7 @@ function StoryDetailView({ submission }) {
             {submission.photoUrls.map((photo, index) => (
               <div key={index} className={styles.photoItem}>
                 <img
-                  src={photo.currentUrl || photo.originalUrl || photo}
+                  src={photo}
                   alt={`Photo ${index + 1}`}
                 />
               </div>
@@ -668,22 +670,21 @@ function InlineImageManager({ images, setImages, onSave, onCancel, isUpdating, s
     if (over && active.id !== over.id) {
       const oldIndex = parseInt(active.id.replace("image-", ""));
       const newIndex = parseInt(over.id.replace("image-", ""));
-      const reordered = arrayMove(images, oldIndex, newIndex).map((img, i) => ({ ...img, order: i }));
+      const reordered = arrayMove(images, oldIndex, newIndex);
       setImages(reordered);
       setHasChanges(true);
     }
   };
 
   const handleDelete = (index) => {
-    const newImages = images.filter((_, i) => i !== index).map((img, i) => ({ ...img, order: i }));
+    const newImages = images.filter((_, i) => i !== index);
     setImages(newImages);
     setHasChanges(true);
     setDeleteConfirm(null);
   };
 
   const handleCrop = (index) => {
-    const img = images[index];
-    const url = img.originalUrl || img;
+    const url = images[index];
     setCropImage({ index, url });
   };
 
@@ -703,8 +704,9 @@ function InlineImageManager({ images, setImages, onSave, onCancel, isUpdating, s
         throw new Error(result.error || "Upload failed");
       }
 
-      const newImages = images.map((img, i) =>
-        i === cropImage.index ? { ...img, currentUrl: result.urls[0] } : img
+      // Replace old URL with new cropped image URL
+      const newImages = images.map((url, i) =>
+        i === cropImage.index ? result.urls[0] : url
       );
       setImages(newImages);
       setHasChanges(true);
@@ -723,8 +725,6 @@ function InlineImageManager({ images, setImages, onSave, onCancel, isUpdating, s
     setHasChanges(false);
   };
 
-  const getImageUrl = (img) => img.currentUrl || img.originalUrl || img;
-
   return (
     <div className={styles.imageManager}>
       <div className={styles.imageManagerHeader}>
@@ -738,15 +738,14 @@ function InlineImageManager({ images, setImages, onSave, onCancel, isUpdating, s
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={images.map((_, i) => getImageId(i))} strategy={rectSortingStrategy}>
             <div className={styles.imageManagerGrid}>
-              {images.map((img, index) => (
+              {images.map((url, index) => (
                 <SortableImageItem
                   key={index}
                   id={getImageId(index)}
-                  url={getImageUrl(img)}
+                  url={url}
                   index={index}
                   onCrop={() => handleCrop(index)}
                   onDelete={() => setDeleteConfirm(index)}
-                  isEdited={!!img.currentUrl}
                 />
               ))}
             </div>
@@ -789,7 +788,7 @@ function InlineImageManager({ images, setImages, onSave, onCancel, isUpdating, s
   );
 }
 
-function SortableImageItem({ id, url, index, onCrop, onDelete, isEdited }) {
+function SortableImageItem({ id, url, index, onCrop, onDelete }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   const style = {
@@ -804,7 +803,6 @@ function SortableImageItem({ id, url, index, onCrop, onDelete, isEdited }) {
       <button type="button" className={styles.dragHandle} {...attributes} {...listeners}>
         <DragIcon />
       </button>
-      {isEdited && <span className={styles.editedBadge}>Edited</span>}
       <img src={url} alt={`Image ${index + 1}`} draggable={false} />
       <div className={styles.imageActions}>
         <button type="button" onClick={onCrop} className={styles.imageCropButton} title="Crop image">
@@ -818,21 +816,30 @@ function SortableImageItem({ id, url, index, onCrop, onDelete, isEdited }) {
   );
 }
 
-// Crop Modal with react-easy-crop
+// Crop & Rotate Modal with react-easy-crop
 function CropModal({ imageUrl, onSave, onCancel, isUploading }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
   const onCropComplete = useCallback((_, croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
+  const handleRotateLeft = () => {
+    setRotation((prev) => (prev - 90 + 360) % 360);
+  };
+
+  const handleRotateRight = () => {
+    setRotation((prev) => (prev + 90) % 360);
+  };
+
   const handleSave = async () => {
     if (!croppedAreaPixels) return;
 
     try {
-      const croppedBlob = await getCroppedImage(imageUrl, croppedAreaPixels);
+      const croppedBlob = await getCroppedImage(imageUrl, croppedAreaPixels, rotation);
       onSave(croppedBlob);
     } catch (error) {
       console.error("Crop error:", error);
@@ -843,7 +850,7 @@ function CropModal({ imageUrl, onSave, onCancel, isUploading }) {
     <div className={styles.cropOverlay}>
       <div className={styles.cropModal}>
         <div className={styles.cropHeader}>
-          <h3>Crop Image</h3>
+          <h3>Edit Image</h3>
           <button type="button" onClick={onCancel} disabled={isUploading} className={styles.cropCloseButton}>
             &times;
           </button>
@@ -854,16 +861,45 @@ function CropModal({ imageUrl, onSave, onCancel, isUploading }) {
             image={imageUrl}
             crop={crop}
             zoom={zoom}
+            rotation={rotation}
             aspect={1}
             onCropChange={setCrop}
             onCropComplete={onCropComplete}
             onZoomChange={setZoom}
+            onRotationChange={setRotation}
           />
         </div>
 
         <div className={styles.cropControls}>
+          {/* Rotation Controls */}
+          <div className={styles.rotationControls}>
+            <span className={styles.controlLabel}>Rotate</span>
+            <div className={styles.rotationButtons}>
+              <button
+                type="button"
+                onClick={handleRotateLeft}
+                disabled={isUploading}
+                className={styles.rotateButton}
+                title="Rotate left 90°"
+              >
+                <RotateLeftIcon />
+              </button>
+              <span className={styles.rotationValue}>{rotation}°</span>
+              <button
+                type="button"
+                onClick={handleRotateRight}
+                disabled={isUploading}
+                className={styles.rotateButton}
+                title="Rotate right 90°"
+              >
+                <RotateRightIcon />
+              </button>
+            </div>
+          </div>
+
+          {/* Zoom Control */}
           <label className={styles.zoomLabel}>
-            Zoom
+            <span className={styles.controlLabel}>Zoom</span>
             <input
               type="range"
               min={1}
@@ -882,7 +918,7 @@ function CropModal({ imageUrl, onSave, onCancel, isUploading }) {
             Cancel
           </button>
           <button type="button" onClick={handleSave} disabled={isUploading} className={styles.saveButton}>
-            {isUploading ? "Saving..." : "Apply Crop"}
+            {isUploading ? "Saving..." : "Apply Changes"}
           </button>
         </div>
       </div>
@@ -890,17 +926,51 @@ function CropModal({ imageUrl, onSave, onCancel, isUploading }) {
   );
 }
 
-// Helper: Create cropped image from canvas
-async function getCroppedImage(imageSrc, pixelCrop) {
+// Helper: Create cropped and rotated image from canvas
+async function getCroppedImage(imageSrc, pixelCrop, rotation = 0) {
   const image = await createImage(imageSrc);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
+  // Calculate bounding box of the rotated image
+  const rotRad = (rotation * Math.PI) / 180;
+  const { width: bBoxWidth, height: bBoxHeight } = getRotatedBoundingBox(
+    image.width,
+    image.height,
+    rotation
+  );
 
-  ctx.drawImage(
-    image,
+  // Set canvas size to accommodate rotated image
+  canvas.width = bBoxWidth;
+  canvas.height = bBoxHeight;
+
+  // Translate to center, rotate, then translate back
+  ctx.translate(bBoxWidth / 2, bBoxHeight / 2);
+  ctx.rotate(rotRad);
+  ctx.translate(-image.width / 2, -image.height / 2);
+
+  // Draw the rotated image
+  ctx.drawImage(image, 0, 0);
+
+  // Get the rotated image data
+  const rotatedImageData = ctx.getImageData(0, 0, bBoxWidth, bBoxHeight);
+
+  // Create a new canvas for the cropped result
+  const croppedCanvas = document.createElement("canvas");
+  const croppedCtx = croppedCanvas.getContext("2d");
+
+  croppedCanvas.width = pixelCrop.width;
+  croppedCanvas.height = pixelCrop.height;
+
+  // Put the rotated image data on a temporary canvas and crop from it
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = bBoxWidth;
+  tempCanvas.height = bBoxHeight;
+  tempCanvas.getContext("2d").putImageData(rotatedImageData, 0, 0);
+
+  // Draw the cropped portion
+  croppedCtx.drawImage(
+    tempCanvas,
     pixelCrop.x,
     pixelCrop.y,
     pixelCrop.width,
@@ -912,8 +982,29 @@ async function getCroppedImage(imageSrc, pixelCrop) {
   );
 
   return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.9);
+    croppedCanvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.9);
   });
+}
+
+// Helper: Calculate bounding box dimensions after rotation
+function getRotatedBoundingBox(width, height, rotation) {
+  const rotRad = (rotation * Math.PI) / 180;
+  const absRotRad = Math.abs(rotRad);
+
+  // For 90° increments, swap dimensions
+  if (rotation % 90 === 0) {
+    const is90or270 = (rotation / 90) % 2 !== 0;
+    return {
+      width: is90or270 ? height : width,
+      height: is90or270 ? width : height,
+    };
+  }
+
+  // For arbitrary angles, calculate bounding box
+  return {
+    width: Math.abs(Math.cos(absRotRad) * width) + Math.abs(Math.sin(absRotRad) * height),
+    height: Math.abs(Math.sin(absRotRad) * width) + Math.abs(Math.cos(absRotRad) * height),
+  };
 }
 
 // Helper: Load image
@@ -1059,6 +1150,22 @@ function CropIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M6 2v4H2v2h4v12h12v4h2v-4h4v-2h-4V6h-2v12H8V6h12V4H8V2H6z" />
+    </svg>
+  );
+}
+
+function RotateLeftIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38" />
+    </svg>
+  );
+}
+
+function RotateRightIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38" />
     </svg>
   );
 }
