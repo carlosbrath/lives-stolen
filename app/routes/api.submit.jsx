@@ -4,7 +4,6 @@ import {
   handleCors,
   jsonResponse,
   errorResponse,
-  parseAgeRange,
   parsePhotoUrls,
   trimOrNull,
 } from "../utils/api.server";
@@ -68,7 +67,7 @@ export async function action({ request }) {
         zipCode: trimOrNull(data.zipCode),
         roadUserType: data.roadUserType.trim(),
         injuryType: data.injuryType.trim(),
-        age: parseAgeRange(data.ageRange),
+        age: data.age ? parseInt(data.age, 10) : null,
         gender: trimOrNull(data.gender),
         shortTitle: data.victimName?.trim() || `Story from ${data.state.trim()}`,
         victimStory: data.victimStory.trim(),

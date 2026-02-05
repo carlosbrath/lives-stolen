@@ -1162,28 +1162,28 @@ class StoryDetailManager {
       <div class="story-detail-info-list">
         ${this.story.relation ? `
           <div class="story-detail-info-item">
-            <span class="story-detail-info-label">Submitted by</span>
+            <span class="story-detail-info-label">Submitted by: </span>
             <span class="story-detail-info-value">${this.story.relation}</span>
           </div>
         ` : ''}
 
         ${this.story.state ? `
           <div class="story-detail-info-item">
-            <span class="story-detail-info-label">Location</span>
+            <span class="story-detail-info-label">Location: </span>
             <span class="story-detail-info-value">${this.story.state}</span>
           </div>
         ` : ''}
 
         ${this.story.date ? `
           <div class="story-detail-info-item">
-            <span class="story-detail-info-label">Date</span>
+            <span class="story-detail-info-label">Date: </span>
             <span class="story-detail-info-value">${actionLabel} ${formattedDate}</span>
           </div>
         ` : ''}
 
         ${this.story.category ? `
           <div class="story-detail-info-item">
-            <span class="story-detail-info-label">Road User Type</span>
+            <span class="story-detail-info-label">Road User Type: </span>
             <span class="story-detail-info-value">${this.story.category}</span>
           </div>
         ` : ''}
@@ -1220,12 +1220,6 @@ class StoryDetailManager {
           </svg>
         </button>
 
-        <button class="story-detail-share-button" id="share-more" aria-label="Share">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-          </svg>
-        </button>
       </div>
     `;
   }
@@ -1282,7 +1276,6 @@ class StoryDetailManager {
     const instagramBtn = document.getElementById('share-instagram');
     const linkedinBtn = document.getElementById('share-linkedin');
     const copyBtn = document.getElementById('share-copy');
-    const moreBtn = document.getElementById('share-more');
 
     if (facebookBtn) {
       facebookBtn.addEventListener('click', () => this.shareStory('facebook'));
@@ -1300,9 +1293,6 @@ class StoryDetailManager {
       copyBtn.addEventListener('click', () => this.copyLink());
     }
 
-    if (moreBtn) {
-      moreBtn.addEventListener('click', () => this.shareNative());
-    }
   }
 
   navigateImage(direction) {
@@ -1406,24 +1396,6 @@ class StoryDetailManager {
     }
   }
 
-  async shareNative() {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: this.story.victimName || this.story.title,
-          text: `Read the story of ${this.story.victimName || this.story.title}`,
-          url: window.location.href
-        });
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.error('Failed to share:', err);
-        }
-      }
-    } else {
-      // Fallback to copy link
-      this.copyLink();
-    }
-  }
 }
 
 /**

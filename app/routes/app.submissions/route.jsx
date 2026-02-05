@@ -21,6 +21,7 @@ import Cropper from "react-easy-crop";
 import { authenticate } from "../../shopify.server";
 import prisma from "../../db.server";
 import { ToastProvider, useToast, ToastStyles } from "../../components/Toast";
+import { sendStatusChangeEmail } from "../../services/email/index.js";
 import styles from "./styles.module.css";
 
 // Constants
@@ -35,7 +36,7 @@ const US_STATES = [
   "Wisconsin", "Wyoming"
 ];
 const ROAD_USER_TYPES = ["Cyclist", "Pedestrian", "Motorcyclist"];
-const INJURY_TYPES = ["Fatal", "Non-fatal"];
+const INJURY_TYPES = ["Fatal", "Non-fatal", "Not-hit"];
 const GENDERS = ["Male", "Female", "Non-binary", "Other", "Prefer not to say"];
 
 const STATUS_COLORS = {
@@ -95,6 +96,9 @@ export async function loader({ request }) {
     shortTitle: sub.shortTitle,
     victimStory: sub.victimStory,
     photoUrls: normalizePhotoUrls(sub.photoUrls),
+    zipCode: sub.zipCode,
+    interestedInContact: sub.interestedInContact,
+    adminNotes: sub.adminNotes,
   }));
 
   return {
@@ -135,12 +139,15 @@ export const action = async ({ request }) => {
         relation: formData.get("relation") || null,
         incidentDate: formData.get("incidentDate"),
         state: formData.get("state"),
+        zipCode: formData.get("zipCode") || null,
         roadUserType: formData.get("roadUserType"),
         injuryType: formData.get("injuryType"),
         age: formData.get("age") ? parseInt(formData.get("age")) : null,
         gender: formData.get("gender") || null,
         shortTitle: formData.get("shortTitle"),
         victimStory: formData.get("victimStory"),
+        interestedInContact: formData.get("interestedInContact") === "true",
+        adminNotes: formData.get("adminNotes") || null,
       };
 
       const photoUrlsString = formData.get("photoUrls");
@@ -174,7 +181,28 @@ export const action = async ({ request }) => {
         publishedAt: status === "published" ? new Date() : null,
       },
     });
-    return json({ success: true, submission: updatedSubmission });
+
+    // Send email notification for status changes (approved, published, rejected)
+    let emailResult = null;
+    if (['approved', 'published', 'rejected'].includes(status)) {
+      try {
+        emailResult = await sendStatusChangeEmail(updatedSubmission, status);
+        console.log(`[SUBMISSION] Email sent for status "${status}":`, emailResult);
+      } catch (emailError) {
+        console.error(`[SUBMISSION] Failed to send email for status "${status}":`, emailError);
+        emailResult = {
+          success: false,
+          error: emailError.message,
+          timestamp: new Date().toISOString(),
+        };
+      }
+    }
+
+    return json({
+      success: true,
+      submission: updatedSubmission,
+      email: emailResult,
+    });
 
   } catch (error) {
     console.error("Action error:", error);
@@ -291,12 +319,24 @@ function SubmissionCard({ submission, shop }) {
       const newStatus = fetcher.data.submission?.status;
       if (newStatus && previousStatusRef.current !== newStatus) {
         previousStatusRef.current = newStatus;
+
+        // Check email status
+        const emailResult = fetcher.data.email;
+        let emailInfo = "";
+        if (emailResult) {
+          emailInfo = emailResult.success
+            ? " - Email sent!"
+            : " - Email failed to send";
+        }
+
         const messages = {
-          approved: "Story approved!",
-          rejected: "Story rejected!",
-          published: "Story published!",
+          approved: `Story approved${emailInfo}`,
+          rejected: `Story rejected${emailInfo}`,
+          published: `Story published${emailInfo}`,
         };
-        showToast(messages[newStatus] || "Status updated!", { type: "success" });
+        showToast(messages[newStatus] || "Status updated!", {
+          type: emailResult?.success !== false ? "success" : "warning"
+        });
       }
     }
   }, [fetcher.data, fetcher.state, showToast]);
@@ -313,12 +353,15 @@ function SubmissionCard({ submission, shop }) {
       relation: submission.relation || "",
       incidentDate: submission.incidentDate || "",
       state: submission.state || "",
+      zipCode: submission.zipCode || "",
       roadUserType: submission.roadUserType || "",
       injuryType: submission.injuryType || "",
       age: submission.age || "",
       gender: submission.gender || "",
       shortTitle: submission.shortTitle || "",
       victimStory: submission.victimStory || "",
+      interestedInContact: submission.interestedInContact || false,
+      adminNotes: submission.adminNotes || "",
     });
     setViewMode("edit");
   };
@@ -519,8 +562,19 @@ function StoryDetailView({ submission }) {
         <InfoBlock title="Incident Details">
           <InfoRow label="Date" value={submission.incidentDate} />
           <InfoRow label="State" value={submission.state} />
+          {submission.zipCode && <InfoRow label="Zip Code" value={submission.zipCode} />}
           <InfoRow label="Road User Type" value={submission.roadUserType} />
           <InfoRow label="Injury Type" value={submission.injuryType} />
+        </InfoBlock>
+
+        <InfoBlock title="Contact & Notes">
+          <InfoRow
+            label="Interested in Contact"
+            value={submission.interestedInContact ? "Yes" : "No"}
+          />
+          {submission.adminNotes && (
+            <InfoRow label="Admin Notes" value={submission.adminNotes} />
+          )}
         </InfoBlock>
       </div>
     </div>
@@ -634,6 +688,33 @@ function InlineEditForm({ editData, setEditData, onSave, onCancel, isUpdating })
             value={editData.injuryType}
             onChange={(e) => handleChange("injuryType", e.target.value)}
             options={INJURY_TYPES}
+          />
+          <FormField
+            label="Zip Code"
+            value={editData.zipCode}
+            onChange={(e) => handleChange("zipCode", e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className={styles.formSection}>
+        <h4 className={styles.sectionHeading}>Contact & Admin</h4>
+        <div className={styles.formGrid}>
+          <div className={styles.formField}>
+            <label className={styles.formLabel}>Interested in Contact</label>
+            <select
+              value={editData.interestedInContact ? "true" : "false"}
+              onChange={(e) => handleChange("interestedInContact", e.target.value === "true")}
+              className={styles.select}
+            >
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </select>
+          </div>
+          <FormField
+            label="Admin Notes" type="textarea"
+            value={editData.adminNotes}
+            onChange={(e) => handleChange("adminNotes", e.target.value)}
           />
         </div>
       </div>
