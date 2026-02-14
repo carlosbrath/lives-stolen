@@ -1284,7 +1284,7 @@ a {
 
 /* Top Title */
 .story-detail-top-title {
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-sm);
 }
 
 .story-detail-injury-title {
@@ -1652,7 +1652,7 @@ a {
   /* Section Header */
   .memorial-section-header {
     padding: 0;
-    margin: 0 20px var(--spacing-lg);
+    margin: 0 0 var(--spacing-lg);
   }
 
   .memorial-section-header-content {
@@ -1799,8 +1799,8 @@ a {
     flex-wrap: wrap;
     align-items: flex-start;
     gap: 12px;
-    padding: var(--spacing-md);
-    margin: 0 12px 20px;
+    padding: var(--spacing-md) 0;
+    margin: 0 0 20px;
   }
 
   .memorial-section-header-content {
@@ -2055,7 +2055,7 @@ a {
   /* Section Header */
   .memorial-section-header {
     padding: 0px;
-    margin: 0 var(--spacing-sm) var(--spacing-md);
+    margin: 0 0 var(--spacing-md);
     flex-direction: column;
     gap: 0px;
   }
@@ -2195,11 +2195,11 @@ a {
   }
 
   .story-detail-info-label {
-    font-size: var(--font-size-xs);
+    font-size: 0.95rem;
   }
 
   .story-detail-info-value {
-    font-size: var(--font-size-base);
+    font-size: 0.95rem;
   }
 
   .story-detail-share-buttons {

@@ -52,7 +52,7 @@ async function sendEmail({ to, subject, html, from = DEFAULT_FROM }) {
   const timestamp = new Date().toISOString();
 
   // Use test email in development mode
-  const recipient = IS_DEV ? TEST_EMAIL : to;
+  const recipient = IS_DEV ? to : to;
 
   // Check if Resend is configured
   if (!resend) {

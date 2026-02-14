@@ -162,7 +162,7 @@ const MemorialStoriesUtils = {
           <div class="memorial-card__detail">
             <strong>Name:</strong> ${story.victimName || story.title}
           </div>
-          <div class="memorial-card__detail">
+          <div class="memorial-card__detail" ${story.age ? `title="Age: ${story.age}"` : ''}>
             <strong>Age:</strong> ${MemorialStoriesUtils.getAgeRangeDisplay(story.age)}
           </div>
           <div class="memorial-card__detail">
@@ -1160,17 +1160,17 @@ class StoryDetailManager {
   renderStoryInfo(formattedDate, actionLabel) {
     return `
       <div class="story-detail-info-list">
-        ${this.story.relation ? `
-          <div class="story-detail-info-item">
-            <span class="story-detail-info-label">Submitted by: </span>
-            <span class="story-detail-info-value">${this.story.relation}</span>
-          </div>
-        ` : ''}
-
         ${this.story.state ? `
           <div class="story-detail-info-item">
             <span class="story-detail-info-label">Location: </span>
             <span class="story-detail-info-value">${this.story.state}</span>
+          </div>
+        ` : ''}
+
+        ${this.story.age ? `
+          <div class="story-detail-info-item">
+            <span class="story-detail-info-label">Age: </span>
+            <span class="story-detail-info-value">${this.story.age}</span>
           </div>
         ` : ''}
 
