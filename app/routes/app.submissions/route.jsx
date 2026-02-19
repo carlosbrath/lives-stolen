@@ -551,11 +551,10 @@ function StoryDetailView({ submission }) {
 
       <div className={styles.detailGrid}>
         <InfoBlock title="Submitter Information">
-          <InfoRow label="Name" value={submission.submitterName} />
           <InfoRow label="Email" value={submission.submitterEmail} />
           {submission.victimName && <InfoRow label="Victim Name" value={submission.victimName} />}
           {submission.relation && <InfoRow label="Relation" value={submission.relation} />}
-          {submission.age && <InfoRow label="Age" value={submission.age} />}
+          <InfoRow label="Age" value={submission.age} />
           {submission.gender && <InfoRow label="Gender" value={submission.gender} />}
         </InfoBlock>
 
