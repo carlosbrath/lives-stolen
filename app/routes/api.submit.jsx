@@ -61,7 +61,6 @@ export async function action({ request }) {
         submitterName: data.submitterName.trim(),
         submitterEmail: data.submitterEmail.trim(),
         victimName: trimOrNull(data.victimName),
-        relation: trimOrNull(data.relation),
         incidentDate: data.incidentDate.trim(),
         state: data.state.trim(),
         zipCode: trimOrNull(data.zipCode),

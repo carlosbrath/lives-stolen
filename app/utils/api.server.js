@@ -47,6 +47,7 @@ export function toStoryFormat(sub) {
     images: photoUrls,
     description: sub.victimStory,
     relation: sub.relation,
+    submitterName: sub.submitterName,
   };
 }
 

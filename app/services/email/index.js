@@ -23,7 +23,7 @@ const resend = process.env.RESEND_API_KEY
   : null;
 
 // Default sender - Update this when you have a custom domain
-const DEFAULT_FROM = 'Story Memorial <onboarding@resend.dev>';
+const DEFAULT_FROM = 'info@weblynxco.com';
 
 // Test email for development (override recipient)
 const TEST_EMAIL = 'sabasabir36203@gmail.com';
@@ -73,7 +73,7 @@ async function sendEmail({ to, subject, html, from = DEFAULT_FROM }) {
     const { data, error } = await resend.emails.send({
       from,
       to: [recipient],
-      subject: IS_DEV ? `[TEST] ${subject}` : subject,
+      subject: IS_DEV ? `${subject}` : subject,
       html,
     });
 

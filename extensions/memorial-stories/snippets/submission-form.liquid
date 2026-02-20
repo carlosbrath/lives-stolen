@@ -35,13 +35,6 @@
     </div>
   </div>
 
-  <div class="memorial-form-row">
-    <div class="memorial-form-group">
-      <label for="relation">Relation</label>
-      <input type="text" id="relation" name="relation">
-    </div>
-  </div>
-
   <!-- Incident Details: Date | Zip | State -->
   <div class="memorial-form-row memorial-form-row-3cols">
     <div class="memorial-form-group">
@@ -202,6 +195,6 @@
       <span class="submit-text">Submit</span>
       <span class="submit-loading" style="display: none;">Submitting...</span>
     </button>
-    <a href="mailto:{{ contact_email }}" class="memorial-email-button">Email Us</a>
+    {% comment %} <a href="mailto:{{ contact_email }}" class="memorial-email-button">Email Us</a> {% endcomment %}
   </div>
 </form>

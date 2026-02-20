@@ -86,7 +86,6 @@ export async function loader({ request }) {
     submitterName: sub.submitterName,
     submitterEmail: sub.submitterEmail,
     victimName: sub.victimName,
-    relation: sub.relation,
     age: sub.age,
     gender: sub.gender,
     incidentDate: sub.incidentDate,
@@ -136,7 +135,6 @@ export const action = async ({ request }) => {
         submitterName: formData.get("submitterName"),
         submitterEmail: formData.get("submitterEmail"),
         victimName: formData.get("victimName") || null,
-        relation: formData.get("relation") || null,
         incidentDate: formData.get("incidentDate"),
         state: formData.get("state"),
         zipCode: formData.get("zipCode") || null,
@@ -350,7 +348,6 @@ function SubmissionCard({ submission, shop }) {
       submitterName: submission.submitterName || "",
       submitterEmail: submission.submitterEmail || "",
       victimName: submission.victimName || "",
-      relation: submission.relation || "",
       incidentDate: submission.incidentDate || "",
       state: submission.state || "",
       zipCode: submission.zipCode || "",
@@ -551,9 +548,9 @@ function StoryDetailView({ submission }) {
 
       <div className={styles.detailGrid}>
         <InfoBlock title="Submitter Information">
+          <InfoRow label="Name" value={submission.submitterName} />
           <InfoRow label="Email" value={submission.submitterEmail} />
           {submission.victimName && <InfoRow label="Victim Name" value={submission.victimName} />}
-          {submission.relation && <InfoRow label="Relation" value={submission.relation} />}
           <InfoRow label="Age" value={submission.age} />
           {submission.gender && <InfoRow label="Gender" value={submission.gender} />}
         </InfoBlock>
@@ -642,11 +639,6 @@ function InlineEditForm({ editData, setEditData, onSave, onCancel, isUpdating })
             label="Victim Name"
             value={editData.victimName}
             onChange={(e) => handleChange("victimName", e.target.value)}
-          />
-          <FormField
-            label="Relation"
-            value={editData.relation}
-            onChange={(e) => handleChange("relation", e.target.value)}
           />
           <FormField
             label="Age" type="number"
